@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧課堂助手</title>
+    <!-- 載入 Tailwind CSS 框架 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 設定字體和顏色主題 -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+            transition: background-color 0.3s; /* for countdown flash */
+        }
+        /* Custom scrollbar for student list */
+        #student-list-container::-webkit-scrollbar,
+        #class-management-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        #student-list-container::-webkit-scrollbar-thumb,
+        #class-management-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        /* Style for the drawn name display */
+        #draw-result {
+            transition: all 0.3s ease-in-out;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Styling for the timer display */
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            letter-spacing: 2px;
+            margin: 10px 0;
+            min-width: 150px;
+            text-align: center;
+        }
+        /* Custom class for the scoring buttons */
+        .score-btn {
+            @apply p-2 rounded-full shadow-md transition duration-150 ease-in-out hover:shadow-lg focus:outline-none;
+        }
+        /* Style for inline editing */
+        .editable-content {
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            gap: 4px;
+        }
+        .edit-btn {
+            @apply text-gray-400 hover:text-blue-600 p-0.5 rounded transition duration-150;
+        }
+        /* Style for draw result modal animation */
+        #draw-result-modal-content {
+            transition: all 0.2s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- 頂部功能列表 -->
+    <nav class="bg-white shadow-lg sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-xl font-bold text-gray-800">課堂助手</h1>
+                <div class="flex items-center space-x-4">
+                    <!-- 計時器 -->
+                    <button id="toggle-stopwatch-btn" class="p-3 rounded-full hover:bg-gray-100 transition duration-150" title="計時器">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
+                    <!-- 倒數計時 (已更換為沙漏圖示) -->
+                    <button id="toggle-countdown-btn" class="p-3 rounded-full hover:bg-gray-100 transition duration-150" title="倒數計時">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 2h12v6l-4 4 4 4v6H6v-6l4-4-4-4V2z" />
+                        </svg>
+                    </button>
+                    <!-- 班級管理/設定 (新功能) -->
+                    <button id="toggle-management-btn" class="p-3 rounded-full hover:bg-gray-100 transition duration-150" title="班級管理">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
+                    <!-- 新增資料 -->
+                    <button id="add-class-modal-btn" onclick="openCreationModal()" class="p-3 rounded-full hover:bg-gray-100 transition duration-150" title="新增班級與學生資料">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 計時/倒數顯示區 -->
+    <div id="timer-container" class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
+        <div id="stopwatch-area" class="bg-yellow-100 p-4 rounded-lg shadow-md mb-4 hidden items-center justify-center space-x-4">
+            <span class="timer-display" id="stopwatch-display">00:00</span>
+            <div class="flex space-x-2">
+                <button onclick="startStopwatch()" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150 shadow-md">開始</button>
+                <button onclick="stopStopwatch()" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 shadow-md">停止</button>
+                <button onclick="resetStopwatch()" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition duration-150 shadow-md">重設</button>
+            </div>
+        </div>
+        <div id="countdown-area" class="bg-red-100 p-4 rounded-lg shadow-md mb-4 hidden items-center justify-center space-x-4">
+            <span class="timer-display" id="countdown-display">00:00</span>
+            <div class="flex space-x-2">
+                <input type="number" id="countdown-minutes" placeholder="分" class="w-16 p-2 border border-gray-300 rounded-lg text-center" min="0" max="60">
+                <input type="number" id="countdown-seconds" placeholder="秒" class="w-16 p-2 border border-gray-300 rounded-lg text-center" min="0" max="59">
+                <button onclick="setCountdownTime()" class="px-4 py-2 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition duration-150 shadow-md">設定</button>
+                <button onclick="startCountdown()" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150 shadow-md">開始</button>
+                <button onclick="stopCountdown()" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 shadow-md">停止</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要應用程式區域 -->
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- 左側：班級選擇、抽籤結果與功能 -->
+        <section class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-full sticky top-20 self-start">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">抽籤與數據</h2>
+            </div>
+            <div class="mb-6">
+                <label for="class-select" class="block text-sm font-medium text-gray-700 mb-2">選擇班級：</label>
+                <div class="flex space-x-2">
+                    <select id="class-select" onchange="handleClassChange()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 shadow-sm">
+                        <option value="" disabled selected>請先新增班級資料</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-6 border-t pt-4">
+                <h3 class="text-xl font-medium text-gray-800 mb-3">隨機點名</h3>
+                <div id="draw-result" class="bg-blue-50 border-2 border-blue-200 text-blue-800 font-extrabold text-4xl sm:text-5xl rounded-lg mb-4 py-8 shadow-inner text-center">
+                    待選中
+                </div>
+                <button id="draw-btn" onclick="drawStudent()" class="w-full px-4 py-3 bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition duration-150 shadow-xl focus:outline-none focus:ring-4 focus:ring-red-300 disabled:bg-red-300" disabled>
+                    擲骰子 (從勾選名單中抽出)
+                </button>
+                <p id="selection-status" class="text-sm text-gray-500 mt-2 text-center"></p>
+            </div>
+        </section>
+
+        <!-- 右側：學生列表與計分 / 班級管理 -->
+        <section class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+            <!-- 學生列表視圖 -->
+            <div id="student-list-area">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">學生列表與分數管理</h2>
+                <div id="student-list-container" class="overflow-y-auto max-h-[70vh] border border-gray-200 rounded-lg shadow-inner">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">選取</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12">座號</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-4/12">姓名</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-5/12">分數操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-list-body" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="4" class="text-center py-8 text-gray-500">請透過 $\huge \text{+}$ 按鈕新增班級資料</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 班級管理視圖 (預設隱藏) -->
+            <div id="class-management-area" class="hidden">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">班級管理</h2>
+                <div id="class-management-content" class="space-y-4">
+                    <!-- 內容將由 JS 動態生成 -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 彈出視窗：新增班級與學生名單 Modal -->
+    <div id="data-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-20 items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+            <h3 class="text-xl font-semibold mb-4">新增班級與學生名單</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="new-class-name" class="block text-sm font-medium text-gray-700 mb-1">班級名稱:</label>
+                    <input type="text" id="new-class-name" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="例如: 一年甲班">
+                </div>
+                <div>
+                    <label for="student-list-input" class="block text-sm font-medium text-gray-700 mb-1">學生名單:</label>
+                    <textarea id="student-list-input" class="w-full h-40 p-3 border border-gray-300 rounded-lg resize-none text-sm font-mono" placeholder="輸入學生座號與姓名，中間用空格區分
+例如：
+1 王一一
+2 李二二
+3 張三三"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="parseAndAddClass()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150">新增班級</button>
+                <button onclick="closeDataModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition duration-150">取消/關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出視窗：抽籤結果 Modal -->
+    <div id="draw-result-modal" class="fixed inset-0 bg-gray-800 bg-opacity-80 hidden z-30 items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center transform transition-all scale-95 opacity-0" id="draw-result-modal-content">
+            <h3 class="text-2xl font-bold text-gray-600 mb-4">抽中的是...</h3>
+            <p id="modal-winner-name" class="text-6xl font-extrabold text-blue-600 my-8 py-4 bg-blue-50 rounded-lg">學生姓名</p>
+            <button onclick="closeDrawResultModal()" class="w-full px-6 py-3 bg-blue-600 text-white font-bold text-lg rounded-lg hover:bg-blue-700 transition duration-150 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300">繼續</button>
+        </div>
+    </div>
+
+    <!-- 提示訊息框 -->
+    <div id="message-box" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 p-3 bg-gray-800 text-white rounded-lg shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-30">訊息內容</div>
+
+
+    <script>
+        // --- 全局變數 ---
+        let classData = [];
+        let currentClassIndex = -1;
+        let isManagementViewActive = false;
+        
+        // --- 計時器與音效狀態變數 ---
+        let stopwatchInterval;
+        let stopwatchSeconds = 0;
+        let countdownInterval;
+        let countdownSeconds = 0;
+        let isCountdownRunning = false;
+        const MAX_TIME_SECONDS = 60 * 60; // 60 minutes limit
+        let audioCtx; // For Web Audio API
+
+        // --- 工具函式 ---
+        function showMessage(message, duration = 3000) {
+            const msgBox = document.getElementById('message-box');
+            msgBox.textContent = message;
+            msgBox.classList.remove('opacity-0', 'pointer-events-none');
+            msgBox.classList.add('opacity-100');
+            setTimeout(() => {
+                msgBox.classList.remove('opacity-100');
+                msgBox.classList.add('opacity-0', 'pointer-events-none');
+            }, duration);
+        }
+
+        function formatTime(totalSeconds) {
+            const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+            const seconds = String(totalSeconds % 60).padStart(2, '0');
+            return `${minutes}:${seconds}`;
+        }
+
+        // --- 資料管理與儲存 ---
+        function loadData() {
+            const savedData = localStorage.getItem('classAssistantData');
+            if (savedData) {
+                try {
+                    classData = JSON.parse(savedData);
+                    showMessage('課堂數據已從本地儲存載入。');
+                } catch (e) {
+                    showMessage('載入數據失敗，JSON 格式錯誤。', 5000);
+                    classData = [];
+                }
+            } else {
+                classData = [];
+            }
+            renderClassDropdown();
+            if (classData.length > 0) {
+                document.getElementById('class-select').value = classData[0].class_name;
+                handleClassChange();
+            } else {
+                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">請透過 $\huge \text{+}$ 按鈕新增班級資料</td></tr>';
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('classAssistantData', JSON.stringify(classData));
+        }
+
+        function parseAndAddClass() {
+            const classNameInput = document.getElementById('new-class-name');
+            const studentListInput = document.getElementById('student-list-input');
+            const className = classNameInput.value.trim();
+            const textInput = studentListInput.value.trim();
+
+            if (!className) return showMessage('請輸入班級名稱');
+            if (classData.some(cls => cls.class_name === className)) return showMessage(`班級名稱 "${className}" 已存在。`);
+            if (!textInput) return showMessage('請輸入學生名單');
+
+            const { students, errors } = parseStudentList(textInput);
+
+            if (students.length === 0) return showMessage("無法解析任何有效的學生資料。請檢查格式是否為 '座號 姓名'。", 5000);
+
+            const newClass = { class_name: className, students: students.sort((a, b) => a.id - b.id) };
+            classData.push(newClass);
+            saveData();
+            renderClassDropdown();
+            document.getElementById('class-select').value = className;
+            handleClassChange();
+            closeDataModal();
+            classNameInput.value = '';
+            studentListInput.value = '';
+            showMessage(`成功新增班級 ${className} (${students.length} 位學生)。`);
+            if (errors > 0) showMessage(`警告：匯入過程中忽略了 ${errors} 行無效或重複的資料。`, 6000);
+        }
+
+        function parseStudentList(textInput) {
+            const students = [];
+            const lines = textInput.split('\n');
+            const idSet = new Set();
+            let errors = 0;
+
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine || trimmedLine.startsWith('#')) return;
+                const parts = trimmedLine.split(/[, ]+/).filter(p => p.length > 0);
+                if (parts.length >= 2 && !isNaN(parseInt(parts[0]))) {
+                    const id = parseInt(parts[0]);
+                    const name = parts.slice(1).join(' ');
+                    if (name && !idSet.has(id) && id >= 1) {
+                        idSet.add(id);
+                        students.push({ id, name, score: 0, selected: true });
+                        return;
+                    }
+                }
+                errors++;
+            });
+            return { students, errors };
+        }
+
+        // --- UI 渲染與互動 ---
+        function renderClassDropdown() {
+            const select = document.getElementById('class-select');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="" disabled>請選擇班級</option>';
+            if (classData.length === 0) {
+                select.innerHTML = '<option value="" disabled selected>請先新增班級資料</option>';
+            }
+            classData.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.class_name;
+                option.textContent = cls.class_name;
+                select.appendChild(option);
+            });
+            if (classData.some(cls => cls.class_name === currentValue)) {
+                select.value = currentValue;
+            } else if (classData.length > 0) {
+                select.value = classData[0].class_name;
+            }
+            document.getElementById('draw-btn').disabled = classData.length === 0;
+        }
+
+        function handleClassChange() {
+            if (isManagementViewActive) {
+                toggleManagementView();
+            }
+            const className = document.getElementById('class-select').value;
+            currentClassIndex = classData.findIndex(cls => cls.class_name === className);
+            if (currentClassIndex !== -1) {
+                renderStudentList(currentClassIndex);
+            } else {
+                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">請選擇一個班級</td></tr>';
+                document.getElementById('draw-btn').disabled = true;
+                document.getElementById('selection-status').textContent = '';
+            }
+        }
+
+        function renderStudentList(classIndex) {
+            const studentListBody = document.getElementById('student-list-body');
+            const students = classData[classIndex].students;
+            studentListBody.innerHTML = '';
+            if (students.length === 0) {
+                studentListBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">該班級沒有學生資料。</td></tr>';
+                updateDrawButtonState([]);
+                return;
+            }
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-4 py-3"><input type="checkbox" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" ${student.selected ? 'checked' : ''} onchange="toggleStudentSelection(${classIndex}, ${student.id})"></td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        <div class="editable-content items-center">
+                            <span id="id-display-${student.id}">${student.id}</span>
+                            <button onclick="startEdit(${classIndex}, ${student.id}, 'id')" class="edit-btn ml-2" title="編輯座號">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-3 text-base font-medium text-gray-900">
+                        <div class="editable-content items-center">
+                            <span id="name-display-${student.id}">${student.name}</span>
+                            <button onclick="startEdit(${classIndex}, ${student.id}, 'name')" class="edit-btn ml-2" title="編輯姓名">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-3 text-center">
+                        <div class="flex items-center justify-center space-x-3">
+                            <button onclick="updateScore(${classIndex}, ${student.id}, -1)" class="score-btn bg-green-500 text-white hover:bg-green-600"><span class="text-xl leading-none">－</span></button>
+                            <span id="score-${student.id}" class="text-lg font-bold text-gray-800 w-12 text-center">${student.score}</span>
+                            <button onclick="updateScore(${classIndex}, ${student.id}, 1)" class="score-btn bg-red-500 text-white hover:bg-red-600"><span class="text-xl leading-none">＋</span></button>
+                            <button onclick="deleteStudent(${classIndex}, ${student.id})" class="score-btn bg-gray-500 text-white hover:bg-gray-600" title="刪除學生">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>`;
+                studentListBody.appendChild(row);
+            });
+            updateDrawButtonState(students);
+        }
+        
+        function startEdit(classIndex, studentId, field) {
+            if (document.querySelector('.edit-input-field')) {
+                renderStudentList(classIndex);
+            }
+            const student = classData[classIndex].students.find(s => s.id === studentId);
+            if (!student) return;
+            const displayElement = document.getElementById(`${field}-display-${studentId}`);
+            const parentContainer = displayElement.parentElement;
+            const originalValue = student[field];
+            parentContainer.innerHTML = `
+                <input type="${field === 'id' ? 'number' : 'text'}" 
+                       value="${originalValue}" 
+                       class="edit-input-field p-1 border border-blue-500 rounded text-sm w-full focus:outline-none"
+                       onblur="saveEdit(${classIndex}, ${studentId}, '${field}', this.value)"
+                       onkeydown="if(event.key === 'Enter') this.blur(); if(event.key === 'Escape') renderStudentList(${classIndex});">
+            `;
+            const inputElement = parentContainer.querySelector('input');
+            inputElement.focus();
+            inputElement.select();
+        }
+        
+        function saveEdit(classIndex, studentId, field, newValue) {
+            const student = classData[classIndex].students.find(s => s.id === studentId);
+            if (!student) { renderStudentList(classIndex); return; }
+            newValue = newValue.trim();
+            if (newValue === "") {
+                showMessage(`${field === 'id' ? '座號' : '姓名'}不能為空`, 3000);
+                renderStudentList(classIndex);
+                return;
+            }
+            if (field === 'id') {
+                const newId = parseInt(newValue);
+                if (isNaN(newId) || newId < 1) {
+                    showMessage('座號必須是正整數', 3000);
+                } else if (newId !== student.id && classData[classIndex].students.some(s => s.id === newId)) {
+                    showMessage('座號已存在', 3000);
+                } else if (newId !== student.id) {
+                    student.id = newId;
+                    classData[classIndex].students.sort((a, b) => a.id - b.id);
+                    saveData();
+                    showMessage('座號更新成功', 2000);
+                }
+            } else if (field === 'name') {
+                if (newValue !== student.name) {
+                    student.name = newValue;
+                    saveData();
+                    showMessage('姓名更新成功', 2000);
+                }
+            }
+            renderStudentList(classIndex);
+        }
+
+        function updateScore(classIndex, studentId, delta) {
+            const student = classData[classIndex].students.find(s => s.id === studentId);
+            if (student) {
+                student.score += delta;
+                document.getElementById(`score-${studentId}`).textContent = student.score;
+                saveData();
+            }
+        }
+        
+        function deleteStudent(classIndex, studentId) {
+            const studentIndex = classData[classIndex].students.findIndex(s => s.id === studentId);
+            if (studentIndex > -1) {
+                const studentName = classData[classIndex].students[studentIndex].name;
+                classData[classIndex].students.splice(studentIndex, 1);
+                saveData();
+                showMessage(`學生 "${studentName}" 已被刪除。`);
+                renderStudentList(classIndex);
+            }
+        }
+
+        function toggleStudentSelection(classIndex, studentId) {
+            const student = classData[classIndex].students.find(s => s.id === studentId);
+            if (student) {
+                student.selected = !student.selected;
+                saveData();
+                updateDrawButtonState(classData[currentClassIndex].students);
+            }
+        }
+
+        function updateDrawButtonState(students) {
+            const selectedStudents = students.filter(s => s.selected);
+            document.getElementById('draw-btn').disabled = selectedStudents.length === 0;
+            document.getElementById('selection-status').textContent = selectedStudents.length > 0 ? `當前有 ${selectedStudents.length} 位學生被勾選參與抽籤。` : '請勾選至少一位學生參與抽籤。';
+        }
+
+        function drawStudent() {
+            if (currentClassIndex === -1) return showMessage('請先選擇班級');
+            const selectedStudents = classData[currentClassIndex].students.filter(s => s.selected);
+            if (selectedStudents.length === 0) return showMessage('請勾選學生才能進行抽籤！');
+            const resultDisplay = document.getElementById('draw-result');
+            resultDisplay.textContent = '抽取中...';
+            resultDisplay.classList.add('animate-pulse');
+            setTimeout(() => {
+                const drawnStudent = selectedStudents[Math.floor(Math.random() * selectedStudents.length)];
+                const modal = document.getElementById('draw-result-modal');
+                const modalContent = document.getElementById('draw-result-modal-content');
+                document.getElementById('modal-winner-name').textContent = drawnStudent.name;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => modalContent.classList.remove('scale-95', 'opacity-0'), 10);
+                resultDisplay.classList.remove('animate-pulse');
+            }, 1500);
+        }
+
+        function closeDrawResultModal() {
+            const modal = document.getElementById('draw-result-modal');
+            const modalContent = document.getElementById('draw-result-modal-content');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('draw-result').textContent = '待選中';
+            }, 200);
+        }
+
+        // --- 班級管理功能 ---
+        function toggleManagementView() {
+            isManagementViewActive = !isManagementViewActive;
+            document.getElementById('student-list-area').classList.toggle('hidden', isManagementViewActive);
+            document.getElementById('class-management-area').classList.toggle('hidden', !isManagementViewActive);
+            if (isManagementViewActive) {
+                renderClassManagementList();
+            } else {
+                handleClassChange();
+            }
+        }
+
+        function renderClassManagementList() {
+            const contentArea = document.getElementById('class-management-content');
+            contentArea.innerHTML = '';
+            if (classData.length === 0) {
+                contentArea.innerHTML = '<p class="text-gray-500">目前沒有任何班級資料可供管理。</p>';
+                return;
+            }
+            const listContainer = document.createElement('div');
+            listContainer.id = "class-management-list";
+            listContainer.className = "space-y-3 max-h-[70vh] overflow-y-auto pr-2";
+            classData.forEach((cls, index) => {
+                const itemWrapper = document.createElement('div'); // Wrapper for item and form
+                itemWrapper.className = 'class-management-item-wrapper';
+                
+                const item = document.createElement('div');
+                item.className = 'class-management-item flex justify-between items-center bg-gray-50 p-3 rounded-lg border';
+                item.innerHTML = `
+                    <span class="font-semibold text-gray-700">${cls.class_name}</span>
+                    <div class="space-x-2">
+                        <button onclick="showAddStudentForm(${index})" class="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition">新增學生</button>
+                        <button onclick="renderEditClassForm(${index})" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition">修改</button>
+                        <button onclick="deleteClass(${index})" class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition">刪除</button>
+                    </div>`;
+                itemWrapper.appendChild(item);
+                listContainer.appendChild(itemWrapper);
+            });
+            contentArea.appendChild(listContainer);
+        }
+        
+        function showAddStudentForm(index) {
+            renderClassManagementList(); // Reset view to close other forms
+            const contentArea = document.getElementById('class-management-content');
+            const classItemWrapper = contentArea.querySelectorAll('.class-management-item-wrapper')[index];
+            const formHtml = `
+                <div class="mt-2 p-3 bg-gray-100 rounded-lg border">
+                    <textarea id="new-students-input-${index}" class="w-full h-24 p-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="輸入座號 姓名 例如\n1 王一一"></textarea>
+                    <div class="flex justify-end space-x-2 mt-2">
+                        <button onclick="addStudentsToClass(${index})" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">確認新增</button>
+                        <button onclick="renderClassManagementList()" class="px-3 py-1 bg-gray-300 text-gray-800 text-sm rounded hover:bg-gray-400">取消</button>
+                    </div>
+                </div>
+            `;
+            classItemWrapper.insertAdjacentHTML('beforeend', formHtml);
+            document.getElementById(`new-students-input-${index}`).focus();
+        }
+
+        function addStudentsToClass(index) {
+            const inputElement = document.getElementById(`new-students-input-${index}`);
+            const textInput = inputElement.value.trim();
+            if (!textInput) return showMessage('請輸入學生資料');
+
+            const existingStudents = classData[index].students;
+            const existingIds = new Set(existingStudents.map(s => s.id));
+            const { students: newStudents, errors } = parseStudentList(textInput);
+            
+            let addedCount = 0, duplicateCount = 0;
+            newStudents.forEach(newStudent => {
+                if (existingIds.has(newStudent.id)) {
+                    duplicateCount++;
+                } else {
+                    existingStudents.push(newStudent);
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                classData[index].students.sort((a, b) => a.id - b.id);
+                saveData();
+                showMessage(`成功新增 ${addedCount} 位學生。`);
+            }
+            if (duplicateCount > 0) showMessage(`忽略了 ${duplicateCount} 位座號重複的學生。`, 4000);
+            if (errors > 0) showMessage(`忽略了 ${errors} 行格式錯誤的資料。`, 4000);
+            renderClassManagementList();
+        }
+
+        function renderEditClassForm(index) {
+            const cls = classData[index];
+            const contentArea = document.getElementById('class-management-content');
+            const studentListText = cls.students.map(s => `${s.id} ${s.name}`).join('\n');
+            contentArea.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">班級名稱:</label>
+                        <input type="text" id="edit-class-name" value="${cls.class_name}" class="w-full p-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">學生名單:</label>
+                        <textarea id="edit-student-list" class="w-full h-48 p-2 border border-gray-300 rounded-lg text-sm font-mono">${studentListText}</textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="saveClassChanges(${index})" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">儲存變更</button>
+                        <button onclick="renderClassManagementList()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">取消</button>
+                    </div>
+                </div>`;
+        }
+        
+        function saveClassChanges(index) {
+            const oldClassName = classData[index].class_name;
+            const newClassName = document.getElementById('edit-class-name').value.trim();
+            const studentListText = document.getElementById('edit-student-list').value.trim(); // Corrected variable
+            if (!newClassName) return showMessage('班級名稱不可為空。');
+            if (newClassName !== oldClassName && classData.some(cls => cls.class_name === newClassName)) {
+                return showMessage(`班級名稱 "${newClassName}" 已存在。`);
+            }
+            if (!studentListText) return showMessage('學生名單不可為空。');
+            const { students, errors } = parseStudentList(studentListText); // Corrected variable
+            if (students.length === 0) return showMessage("無法解析任何有效的學生資料。");
+            classData[index].class_name = newClassName;
+            classData[index].students = students.sort((a, b) => a.id - b.id);
+            saveData();
+            showMessage('班級資料更新成功！');
+            if (errors > 0) showMessage(`警告：儲存過程中忽略了 ${errors} 行無效資料。`, 6000);
+            renderClassDropdown();
+            document.getElementById('class-select').value = newClassName;
+            renderClassManagementList();
+        }
+
+        function deleteClass(index) {
+            const className = classData[index].class_name;
+            classData.splice(index, 1);
+            saveData();
+            showMessage(`班級 "${className}" 已被刪除。`);
+            renderClassDropdown();
+            if (currentClassIndex === index) { handleClassChange(); } 
+            else if (currentClassIndex > index) { currentClassIndex--; }
+            renderClassManagementList();
+        }
+
+        // --- 計時器與音效功能 ---
+        function playAlarmSound(durationInSeconds) {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error("Web Audio API is not supported in this browser");
+                    return;
+                }
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            let beepCount = 0;
+            const intervalId = setInterval(() => {
+                if (beepCount >= durationInSeconds * 2) { // 嗶嗶聲，每秒兩次
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // 高音調 A5
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // 設置音量
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.3);
+                
+                beepCount++;
+            }, 500); // 每 500ms 播放一次
+        }
+
+        function startStopwatch() { if (!stopwatchInterval) { stopwatchInterval = setInterval(() => { if (stopwatchSeconds < MAX_TIME_SECONDS) stopwatchSeconds++; document.getElementById('stopwatch-display').textContent = formatTime(stopwatchSeconds); }, 1000); showMessage('碼表開始計時'); } }
+        function stopStopwatch() { clearInterval(stopwatchInterval); stopwatchInterval = null; showMessage('碼表已停止'); }
+        function resetStopwatch() { stopStopwatch(); stopwatchSeconds = 0; document.getElementById('stopwatch-display').textContent = '00:00'; showMessage('碼表已重設'); }
+        function setCountdownTime() { const m = parseInt(document.getElementById('countdown-minutes').value)||0, s = parseInt(document.getElementById('countdown-seconds').value)||0; let ts=Math.min(m*60+s, MAX_TIME_SECONDS); if(ts>0){ countdownSeconds=ts; document.getElementById('countdown-display').textContent=formatTime(countdownSeconds); showMessage(`倒數時間設定為 ${formatTime(countdownSeconds)}`); } else { showMessage('請設定有效時間'); } }
+        function startCountdown() { if(!isCountdownRunning&&countdownSeconds>0){ isCountdownRunning=true; countdownInterval=setInterval(()=>{if(countdownSeconds>0){ countdownSeconds--; document.getElementById('countdown-display').textContent=formatTime(countdownSeconds);} else { stopCountdown(); document.getElementById('countdown-display').textContent='00:00'; showMessage('倒數計時結束！',5000); document.body.classList.add('bg-red-200'); playAlarmSound(5); setTimeout(()=>document.body.classList.remove('bg-red-200'),300);}},1000); showMessage('倒數計時開始');} else if (countdownSeconds<=0) showMessage('請先設定時間');}
+        function stopCountdown() { clearInterval(countdownInterval); countdownInterval = null; isCountdownRunning = false; showMessage('倒數計時已停止'); }
+
+        // --- UI 顯示/隱藏切換 ---
+        function toggleTimerDisplay(timerType) { const s=document.getElementById('stopwatch-area'), c=document.getElementById('countdown-area'); if(timerType==='stopwatch'){ if(s.classList.toggle('hidden')) s.classList.remove('flex'); else { c.classList.add('hidden'); c.classList.remove('flex'); stopCountdown(); s.classList.add('flex'); } } else { if(c.classList.toggle('hidden')) c.classList.remove('flex'); else { s.classList.add('hidden'); s.classList.remove('flex'); stopStopwatch(); c.classList.add('flex'); } } }
+        function openCreationModal() { document.getElementById('data-modal').classList.add('flex'); document.getElementById('data-modal').classList.remove('hidden'); document.getElementById('new-class-name').value = ''; document.getElementById('student-list-input').value = ''; }
+        function closeDataModal() { document.getElementById('data-modal').classList.add('hidden'); document.getElementById('data-modal').classList.remove('flex'); }
+
+        // --- 初始化應用程式 ---
+        window.onload = function() {
+            document.getElementById('toggle-stopwatch-btn').onclick = () => toggleTimerDisplay('stopwatch');
+            document.getElementById('toggle-countdown-btn').onclick = () => toggleTimerDisplay('countdown');
+            document.getElementById('toggle-management-btn').onclick = toggleManagementView;
+            document.getElementById('add-class-modal-btn').onclick = openCreationModal;
+            loadData();
+            countdownSeconds = 5 * 60;
+            document.getElementById('countdown-display').textContent = formatTime(countdownSeconds);
+        };
+    </script>
+    
+    <!-- 頁尾創作者標示 -->
+    <footer class="text-center py-6 mt-10">
+        <p class="text-sm text-gray-500">前鎮國中資訊組</p>
+    </footer>
+
+</body>
+</html>
+
