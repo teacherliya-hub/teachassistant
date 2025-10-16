@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>前鎮智慧課堂助手</title>
+    <title>智慧課堂助手</title>
     <!-- 載入 Tailwind CSS 框架 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 設定字體和顏色主題 -->
@@ -128,7 +128,7 @@
         <!-- 左側：班級選擇、抽籤結果與功能 -->
         <section class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-full sticky top-20 self-start">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-gray-800">班級列表</h2>
+                <h2 class="text-2xl font-semibold text-gray-800">抽籤與數據</h2>
             </div>
             <div class="mb-6">
                 <label for="class-select" class="block text-sm font-medium text-gray-700 mb-2">選擇班級：</label>
@@ -139,7 +139,7 @@
                 </div>
             </div>
             <div class="mb-6 border-t pt-4">
-                <h3 class="text-xl font-medium text-gray-800 mb-3">隨機抽籤</h3>
+                <h3 class="text-xl font-medium text-gray-800 mb-3">隨機點名</h3>
                 <div id="draw-result" class="bg-blue-50 border-2 border-blue-200 text-blue-800 font-extrabold text-4xl sm:text-5xl rounded-lg mb-4 py-8 shadow-inner text-center">
                     待選中
                 </div>
@@ -154,8 +154,17 @@
         <section class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
             <!-- 學生列表視圖 -->
             <div id="student-list-area">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">學生列表與分數管理</h2>
-                <div id="student-list-container" class="overflow-y-auto max-h-[70vh] border border-gray-200 rounded-lg shadow-inner">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-800">學生列表與分數管理</h2>
+                </div>
+                 <!-- 資料管理按鈕 -->
+                <div class="flex justify-end space-x-2 mb-4">
+                    <button id="export-data-btn" class="px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition">匯出資料</button>
+                    <button id="import-data-btn" class="px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition">匯入資料</button>
+                    <button id="clear-data-btn" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition">清除本機儲存</button>
+                    <input type="file" id="import-file-input" class="hidden" accept=".json">
+                </div>
+                <div id="student-list-container" class="overflow-y-auto max-h-[65vh] border border-gray-200 rounded-lg shadow-inner">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 sticky top-0">
                             <tr>
@@ -166,7 +175,7 @@
                             </tr>
                         </thead>
                         <tbody id="student-list-body" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="4" class="text-center py-8 text-gray-500">請透過右上方加號按鈕新增班級資料</td></tr>
+                            <tr><td colspan="4" class="text-center py-8 text-gray-500">請透過右上角的 '+' 按鈕新增班級資料</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -213,6 +222,18 @@
             <h3 class="text-2xl font-bold text-gray-600 mb-4">抽中的是...</h3>
             <p id="modal-winner-name" class="text-6xl font-extrabold text-blue-600 my-8 py-4 bg-blue-50 rounded-lg">學生姓名</p>
             <button onclick="closeDrawResultModal()" class="w-full px-6 py-3 bg-blue-600 text-white font-bold text-lg rounded-lg hover:bg-blue-700 transition duration-150 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300">繼續</button>
+        </div>
+    </div>
+    
+    <!-- 彈出視窗：確認清除資料 Modal -->
+    <div id="confirm-clear-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-40 items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">確認操作</h3>
+            <p class="text-sm text-gray-600 mb-6">您確定要清除所有儲存在這個瀏覽器中的班級資料嗎？這個操作無法復原。</p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirm-clear-execute-btn" class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">確認清除</button>
+                <button id="confirm-clear-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">取消</button>
+            </div>
         </div>
     </div>
 
@@ -272,7 +293,7 @@
                 document.getElementById('class-select').value = classData[0].class_name;
                 handleClassChange();
             } else {
-                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">請透過右上方"+"按鈕新增班級資料</td></tr>';
+                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">請透過右上角的 \'+\' 按鈕新增班級資料</td></tr>';
             }
         }
 
@@ -643,13 +664,13 @@
         function saveClassChanges(index) {
             const oldClassName = classData[index].class_name;
             const newClassName = document.getElementById('edit-class-name').value.trim();
-            const studentListText = document.getElementById('edit-student-list').value.trim(); // Corrected variable
+            const studentListText = document.getElementById('edit-student-list').value.trim();
             if (!newClassName) return showMessage('班級名稱不可為空。');
             if (newClassName !== oldClassName && classData.some(cls => cls.class_name === newClassName)) {
                 return showMessage(`班級名稱 "${newClassName}" 已存在。`);
             }
             if (!studentListText) return showMessage('學生名單不可為空。');
-            const { students, errors } = parseStudentList(studentListText); // Corrected variable
+            const { students, errors } = parseStudentList(studentListText);
             if (students.length === 0) return showMessage("無法解析任何有效的學生資料。");
             classData[index].class_name = newClassName;
             classData[index].students = students.sort((a, b) => a.id - b.id);
@@ -671,6 +692,71 @@
             else if (currentClassIndex > index) { currentClassIndex--; }
             renderClassManagementList();
         }
+        
+        // --- 資料匯出/匯入/清除功能 ---
+        function exportData() {
+            if (classData.length === 0) {
+                showMessage('沒有資料可以匯出。', 3000);
+                return;
+            }
+            const dataStr = JSON.stringify(classData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, "");
+            link.download = `classroom-data-${timestamp}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showMessage('資料已開始下載...');
+        }
+        
+        function importData() {
+            document.getElementById('import-file-input').click();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedData)) {
+                        throw new Error("JSON 檔案格式不正確，根層級必須是陣列。");
+                    }
+                    classData = importedData;
+                    saveData();
+                    showMessage('資料匯入成功！頁面將會重新整理。', 3000);
+                    setTimeout(() => location.reload(), 1500);
+                } catch (error) {
+                    showMessage(`匯入失敗：${error.message}`, 5000);
+                } finally {
+                    event.target.value = null;
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function openClearConfirmModal() {
+            const modal = document.getElementById('confirm-clear-modal');
+            modal.classList.add('flex');
+            modal.classList.remove('hidden');
+        }
+
+        function closeClearConfirmModal() {
+            const modal = document.getElementById('confirm-clear-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function executeClear() {
+            localStorage.removeItem('classAssistantData');
+            showMessage('所有本機資料已清除。頁面將會重新整理。', 3000);
+            setTimeout(() => location.reload(), 1500);
+        }
 
         // --- 計時器與音效功能 ---
         function playAlarmSound(durationInSeconds) {
@@ -688,32 +774,28 @@
 
             let beepCount = 0;
             const intervalId = setInterval(() => {
-                if (beepCount >= durationInSeconds * 2) { // 嗶嗶聲，每秒兩次
+                if (beepCount >= durationInSeconds * 2) { 
                     clearInterval(intervalId);
                     return;
                 }
-
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // 高音調 A5
-                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // 設置音量
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-
                 oscillator.start(audioCtx.currentTime);
                 oscillator.stop(audioCtx.currentTime + 0.3);
-                
                 beepCount++;
-            }, 500); // 每 500ms 播放一次
+            }, 500);
         }
 
         function startStopwatch() { if (!stopwatchInterval) { stopwatchInterval = setInterval(() => { if (stopwatchSeconds < MAX_TIME_SECONDS) stopwatchSeconds++; document.getElementById('stopwatch-display').textContent = formatTime(stopwatchSeconds); }, 1000); showMessage('碼表開始計時'); } }
         function stopStopwatch() { clearInterval(stopwatchInterval); stopwatchInterval = null; showMessage('碼表已停止'); }
         function resetStopwatch() { stopStopwatch(); stopwatchSeconds = 0; document.getElementById('stopwatch-display').textContent = '00:00'; showMessage('碼表已重設'); }
-        function setCountdownTime() { const m = parseInt(document.getElementById('countdown-minutes').value)||0, s = parseInt(document.getElementById('countdown-seconds').value)||0; let ts=Math.min(m*60+s, MAX_TIME_SECONDS); if(ts>0){ countdownSeconds=ts; document.getElementById('countdown-display').textContent=formatTime(countdownSeconds); showMessage(`倒數時間設定為 ${formatTime(countdownSeconds)}`); } else { showMessage('請設定有效時間'); } }
+        function setCountdownTime() { const m = parseInt(document.getElementById('countdown-minutes').value)||0, s = parseInt(document.getElementById('countdown-seconds').value)||0; let ts=Math.min(m*60+s, MAX_TIME_SECONDS); if(ts>=0){ countdownSeconds=ts; document.getElementById('countdown-display').textContent=formatTime(countdownSeconds); showMessage(`倒數時間設定為 ${formatTime(countdownSeconds)}`); } else { showMessage('請設定有效時間'); } }
         function startCountdown() { if(!isCountdownRunning&&countdownSeconds>0){ isCountdownRunning=true; countdownInterval=setInterval(()=>{if(countdownSeconds>0){ countdownSeconds--; document.getElementById('countdown-display').textContent=formatTime(countdownSeconds);} else { stopCountdown(); document.getElementById('countdown-display').textContent='00:00'; showMessage('倒數計時結束！',5000); document.body.classList.add('bg-red-200'); playAlarmSound(5); setTimeout(()=>document.body.classList.remove('bg-red-200'),300);}},1000); showMessage('倒數計時開始');} else if (countdownSeconds<=0) showMessage('請先設定時間');}
         function stopCountdown() { clearInterval(countdownInterval); countdownInterval = null; isCountdownRunning = false; showMessage('倒數計時已停止'); }
 
@@ -724,10 +806,23 @@
 
         // --- 初始化應用程式 ---
         window.onload = function() {
+            // Top Nav Buttons
             document.getElementById('toggle-stopwatch-btn').onclick = () => toggleTimerDisplay('stopwatch');
             document.getElementById('toggle-countdown-btn').onclick = () => toggleTimerDisplay('countdown');
             document.getElementById('toggle-management-btn').onclick = toggleManagementView;
             document.getElementById('add-class-modal-btn').onclick = openCreationModal;
+            
+            // Data Management Buttons
+            document.getElementById('export-data-btn').onclick = exportData;
+            document.getElementById('import-data-btn').onclick = importData;
+            document.getElementById('import-file-input').onchange = handleFileSelect;
+            document.getElementById('clear-data-btn').onclick = openClearConfirmModal;
+
+            // Modal Buttons
+            document.getElementById('confirm-clear-execute-btn').onclick = executeClear;
+            document.getElementById('confirm-clear-cancel-btn').onclick = closeClearConfirmModal;
+            
+            // Initial Load
             loadData();
             countdownSeconds = 5 * 60;
             document.getElementById('countdown-display').textContent = formatTime(countdownSeconds);
@@ -741,8 +836,4 @@
 
 </body>
 </html>
-
-
-
-
 
