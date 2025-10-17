@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>前鎮國中課堂助手</title>
+    <title>智慧課堂助手</title>
     <!-- 載入 Tailwind CSS 框架 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 設定字體和顏色主題 -->
@@ -274,6 +274,20 @@
             const seconds = String(totalSeconds % 60).padStart(2, '0');
             return `${minutes}:${seconds}`;
         }
+        
+        // --- 資安強化：清理字串以避免 XSS ---
+        function sanitizeString(str) {
+            if (typeof str !== 'string') return str;
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return str.replace(/[&<>"']/g, (m) => map[m]);
+        }
+
 
         // --- 資料管理與儲存 ---
         function loadData() {
@@ -741,13 +755,38 @@
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
+                    
+                    // --- Security Validation and Sanitization ---
                     if (!Array.isArray(importedData)) {
                         throw new Error("JSON 檔案格式不正確，根層級必須是陣列。");
                     }
-                    classData = importedData;
+
+                    const sanitizedData = importedData.map(cls => {
+                        if (typeof cls !== 'object' || cls === null || !cls.class_name || !Array.isArray(cls.students)) {
+                            throw new Error("匯入的資料中發現無效的班級結構。");
+                        }
+                        const sanitizedStudents = cls.students.map(student => {
+                            if (typeof student !== 'object' || student === null || student.id === undefined || student.name === undefined) {
+                                 throw new Error(`班級 "${sanitizeString(cls.class_name)}" 中發現無效的學生資料。`);
+                            }
+                            return {
+                                id: parseInt(student.id) || 0,
+                                name: sanitizeString(String(student.name)),
+                                score: parseInt(student.score) || 0,
+                                selected: !!student.selected
+                            };
+                        });
+                        return {
+                            class_name: sanitizeString(String(cls.class_name)),
+                            students: sanitizedStudents
+                        };
+                    });
+
+                    classData = sanitizedData;
                     saveData();
-                    showMessage('資料匯入成功！頁面將會重新整理。', 3000);
+                    showMessage('資料已安全匯入！頁面將會重新整理。', 3000);
                     setTimeout(() => location.reload(), 1500);
+
                 } catch (error) {
                     showMessage(`匯入失敗：${error.message}`, 5000);
                 } finally {
