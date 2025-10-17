@@ -99,17 +99,17 @@
 
     <!-- 計時/倒數顯示區 -->
     <div id="timer-container" class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
-        <div id="stopwatch-area" class="bg-amber-100 p-4 rounded-lg shadow-md mb-4 hidden items-center justify-center space-x-4">
+        <div id="stopwatch-area" class="bg-amber-100 p-4 rounded-lg shadow-md mb-4 hidden flex flex-col items-center justify-center gap-4 md:flex-row md:space-x-4 md:gap-0">
             <span class="timer-display-stopwatch" id="stopwatch-display">00:00</span>
-            <div class="flex space-x-2">
+            <div class="flex flex-wrap justify-center gap-2">
                 <button onclick="startStopwatch()" class="px-4 py-2 bg-sky-500 text-white font-semibold rounded-lg hover:bg-sky-600 transition duration-150 shadow-md">開始</button>
                 <button onclick="stopStopwatch()" class="px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600 transition duration-150 shadow-md">停止</button>
                 <button onclick="resetStopwatch()" class="px-4 py-2 bg-rose-500 text-white font-semibold rounded-lg hover:bg-rose-600 transition duration-150 shadow-md">重設</button>
             </div>
         </div>
-        <div id="countdown-area" class="bg-rose-100 p-4 rounded-lg shadow-md mb-4 hidden items-center justify-center space-x-4">
+        <div id="countdown-area" class="bg-rose-100 p-4 rounded-lg shadow-md mb-4 hidden flex flex-col items-center justify-center gap-4 md:flex-row md:space-x-4 md:gap-0">
             <span class="timer-display-countdown" id="countdown-display">00:00</span>
-            <div class="flex space-x-2">
+            <div class="flex flex-wrap items-center justify-center gap-2">
                 <input type="number" id="countdown-minutes" placeholder="分" class="w-16 p-2 border border-rose-200 rounded-lg text-center" min="0" max="60">
                 <input type="number" id="countdown-seconds" placeholder="秒" class="w-16 p-2 border border-rose-200 rounded-lg text-center" min="0" max="59">
                 <button onclick="setCountdownTime()" class="px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition duration-150 shadow-md">設定</button>
@@ -853,6 +853,4 @@
 
 </body>
 </html>
-
-
 
