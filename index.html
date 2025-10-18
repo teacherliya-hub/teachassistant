@@ -9,20 +9,18 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f9ff; /* sky-50 */
-            transition: background-color 0.3s; /* for countdown flash */
+            background-color: #f0f9ff; 
+            transition: background-color 0.3s; 
         }
-        /* Custom scrollbar for student list */
         #student-list-container::-webkit-scrollbar,
         #class-management-list::-webkit-scrollbar {
             width: 8px;
         }
         #student-list-container::-webkit-scrollbar-thumb,
         #class-management-list::-webkit-scrollbar-thumb {
-            background-color: #bae6fd; /* sky-200 */
+            background-color: #bae6fd; 
             border-radius: 4px;
         }
-        /* Style for the drawn name display */
         #draw-result {
             transition: all 0.1s ease-in-out;
             min-height: 100px;
@@ -30,18 +28,15 @@
             align-items: center;
             justify-content: center;
         }
-        /* Styling for the timer display */
         .timer-display-stopwatch {
             font-size: 3rem; font-weight: 700; color: #78350f; /* amber-800 */ letter-spacing: 2px; margin: 10px 0; min-width: 150px; text-align: center;
         }
         .timer-display-countdown {
             font-size: 3rem; font-weight: 700; color: #881337; /* rose-900 */ letter-spacing: 2px; margin: 10px 0; min-width: 150px; text-align: center;
         }
-        /* Custom class for the scoring buttons */
         .score-btn {
             @apply p-2 rounded-full shadow-md transition duration-150 ease-in-out hover:shadow-lg focus:outline-none;
         }
-        /* Style for inline editing */
         .editable-content {
             display: flex;
             align-items: center;
@@ -51,7 +46,6 @@
         .edit-btn {
             @apply text-gray-400 hover:text-sky-600 p-0.5 rounded transition duration-150;
         }
-        /* Style for draw result modal animation */
         #draw-result-modal-content {
             transition: all 0.2s ease-out;
         }
@@ -237,21 +231,20 @@
 
 
     <script>
-        // --- 全局變數 ---
+
         let classData = [];
         let currentClassIndex = -1;
         let isManagementViewActive = false;
         
-        // --- 計時器與音效狀態變數 ---
         let stopwatchInterval;
         let stopwatchSeconds = 0;
         let countdownInterval;
         let countdownSeconds = 0;
         let isCountdownRunning = false;
-        const MAX_TIME_SECONDS = 60 * 60; // 60 minutes limit
-        let audioCtx; // For Web Audio API
+        const MAX_TIME_SECONDS = 60 * 60; 
+        let audioCtx; 
 
-        // --- 工具函式 ---
+
         function showMessage(message, duration = 3000) {
             const msgBox = document.getElementById('message-box');
             msgBox.textContent = message;
@@ -276,7 +269,6 @@
         }
 
 
-        // --- 資料管理與儲存 ---
         function loadData() {
             const savedData = localStorage.getItem('classAssistantData');
             if (savedData) {
@@ -354,7 +346,6 @@
             return { students, errors };
         }
 
-        // --- UI 渲染與互動 ---
         function renderClassDropdown() {
             const select = document.getElementById('class-select');
             const currentValue = select.value;
@@ -601,7 +592,6 @@
             }, 200);
         }
 
-        // --- 班級管理功能 ---
         function toggleManagementView() {
             isManagementViewActive = !isManagementViewActive;
             document.getElementById('student-list-area').classList.toggle('hidden', isManagementViewActive);
@@ -644,7 +634,7 @@
         }
         
         function showAddStudentForm(index) {
-            renderClassManagementList(); // Reset view to close other forms
+            renderClassManagementList(); 
             const contentArea = document.getElementById('class-management-content');
             const classItemWrapper = contentArea.querySelectorAll('.class-management-item-wrapper')[index];
             const formHtml = `
@@ -761,7 +751,6 @@
             );
         }
         
-        // --- 資料匯出/匯入/清除功能 ---
         function exportData() {
             if (classData.length === 0) {
                 showMessage('沒有資料可以匯出。', 3000);
@@ -844,7 +833,6 @@
             setTimeout(() => location.reload(), 1500);
         }
         
-        // --- 通用確認 Modal ---
         function showConfirmationModal(title, message, onConfirm) {
             document.getElementById('confirm-title').textContent = title;
             document.getElementById('confirm-message').innerHTML = message;
@@ -867,7 +855,6 @@
             document.getElementById('confirm-action-modal').classList.remove('flex');
         }
 
-        // --- 計時器與音效功能 ---
         function playAlarmSound(durationInSeconds) {
             if (!audioCtx) {
                 try {
@@ -899,31 +886,30 @@
         function startCountdown() { if(!isCountdownRunning&&countdownSeconds>0){ isCountdownRunning=true; countdownInterval=setInterval(()=>{if(countdownSeconds>0){ countdownSeconds--; document.getElementById('countdown-display').textContent=formatTime(countdownSeconds);} else { stopCountdown(); document.getElementById('countdown-display').textContent='00:00'; showMessage('倒數計時結束！',5000); document.body.classList.add('bg-rose-200'); playAlarmSound(5); setTimeout(()=>document.body.classList.remove('bg-rose-200'),300);}},1000); showMessage('倒數計時開始');} else if (countdownSeconds<=0) showMessage('請先設定時間');}
         function stopCountdown() { clearInterval(countdownInterval); countdownInterval = null; isCountdownRunning = false; showMessage('倒數計時已停止'); }
 
-        // --- UI 顯示/隱藏切換 ---
         function toggleTimerDisplay(timerType) { const s=document.getElementById('stopwatch-area'), c=document.getElementById('countdown-area'); if(timerType==='stopwatch'){ if(s.classList.toggle('hidden')) s.classList.remove('flex'); else { c.classList.add('hidden'); c.classList.remove('flex'); stopCountdown(); s.classList.add('flex'); } } else { if(c.classList.toggle('hidden')) c.classList.remove('flex'); else { s.classList.add('hidden'); s.classList.remove('flex'); stopStopwatch(); c.classList.add('flex'); } } }
         function openCreationModal() { document.getElementById('data-modal').classList.add('flex'); document.getElementById('data-modal').classList.remove('hidden'); document.getElementById('new-class-name').value = ''; document.getElementById('student-list-input').value = ''; }
         function closeDataModal() { document.getElementById('data-modal').classList.add('hidden'); document.getElementById('data-modal').classList.remove('flex'); }
 
-        // --- 初始化應用程式 ---
         window.onload = function() {
-            // Top Nav Buttons
+            
             document.getElementById('toggle-stopwatch-btn').onclick = () => toggleTimerDisplay('stopwatch');
             document.getElementById('toggle-countdown-btn').onclick = () => toggleTimerDisplay('countdown');
             document.getElementById('toggle-management-btn').onclick = toggleManagementView;
             document.getElementById('add-class-modal-btn').onclick = openCreationModal;
             
-            // Data Management Buttons
+            
             document.getElementById('export-data-btn').onclick = exportData;
             document.getElementById('import-data-btn').onclick = importData;
             document.getElementById('import-file-input').onchange = handleFileSelect;
             document.getElementById('clear-data-btn').onclick = openClearConfirmModal;
 
-            // Modal Buttons
+
             document.getElementById('confirm-clear-execute-btn').onclick = executeClear;
             document.getElementById('confirm-clear-cancel-btn').onclick = closeClearConfirmModal;
             document.getElementById('confirm-action-cancel-btn').onclick = closeConfirmationModal;
             
-            // Initial Load
+
+            
             loadData();
             countdownSeconds = 5 * 60;
             document.getElementById('countdown-display').textContent = formatTime(countdownSeconds);
@@ -937,3 +923,4 @@
 </body>
 
 </html>
+
