@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智慧課堂助手</title>
-    <!-- 載入 Tailwind CSS 框架 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 設定字體和顏色主題 -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
@@ -61,32 +59,27 @@
 </head>
 <body class="bg-sky-50">
 
-    <!-- 頂部功能列表 -->
     <nav class="bg-sky-700 shadow-lg sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <h1 class="text-xl font-bold text-white">前鎮國中課堂助手</h1>
+                <h1 class="text-xl font-bold text-white">課堂助手</h1>
                 <div class="flex items-center space-x-4">
-                    <!-- 計時器 -->
                     <button id="toggle-stopwatch-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="計時器">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </button>
-                    <!-- 倒數計時 -->
                     <button id="toggle-countdown-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="倒數計時">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 2h12v6l-4 4 4 4v6H6v-6l4-4-4-4V2z" />
                         </svg>
                     </button>
-                    <!-- 班級管理/設定 -->
                     <button id="toggle-management-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="班級管理">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                     </button>
-                    <!-- 新增資料 -->
                     <button id="add-class-modal-btn" onclick="openCreationModal()" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="新增班級與學生資料">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -97,7 +90,6 @@
         </div>
     </nav>
 
-    <!-- 計時/倒數顯示區 -->
     <div id="timer-container" class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
         <div id="stopwatch-area" class="bg-amber-100 p-4 rounded-lg shadow-md mb-4 hidden flex flex-col items-center justify-center gap-4 md:flex-row md:space-x-4 md:gap-0">
             <span class="timer-display-stopwatch" id="stopwatch-display">00:00</span>
@@ -119,10 +111,8 @@
         </div>
     </div>
 
-    <!-- 主要應用程式區域 -->
     <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- 左側：班級選擇、抽籤結果與功能 -->
         <section class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-sky-200/50">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold text-sky-800">抽籤與數據</h2>
@@ -147,9 +137,7 @@
             </div>
         </section>
 
-        <!-- 右側：學生列表與計分 / 班級管理 -->
         <section class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg border border-sky-200/50">
-            <!-- 學生列表視圖 -->
             <div id="student-list-area">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-semibold text-sky-800">學生列表與分數管理</h2>
@@ -158,7 +146,9 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-slate-50 sticky top-0">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/12">選取</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/12">
+                                    <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this)" class="h-5 w-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer">
+                                </th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-2/12">座號</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-4/12">姓名</th>
                                 <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider w-5/12">分數操作</th>
@@ -171,12 +161,10 @@
                 </div>
             </div>
 
-            <!-- 班級管理視圖 (預設隱藏) -->
             <div id="class-management-area" class="hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-semibold text-sky-800">班級管理</h2>
-                     <!-- 資料管理按鈕 -->
-                    <div class="flex space-x-2">
+                     <div class="flex space-x-2">
                         <button id="export-data-btn" class="px-4 py-2 bg-slate-500 text-white text-sm font-semibold rounded-lg hover:bg-slate-600 transition">匯出資料</button>
                         <button id="import-data-btn" class="px-4 py-2 bg-slate-500 text-white text-sm font-semibold rounded-lg hover:bg-slate-600 transition">匯入資料</button>
                         <button id="clear-data-btn" class="px-4 py-2 bg-slate-600 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 transition">清除本機儲存</button>
@@ -184,13 +172,11 @@
                     </div>
                 </div>
                 <div id="class-management-content" class="space-y-4">
-                    <!-- 內容將由 JS 動態生成 -->
-                </div>
+                    </div>
             </div>
         </section>
     </main>
 
-    <!-- 彈出視窗：新增班級與學生名單 Modal -->
     <div id="data-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-20 items-center justify-center">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
             <h3 class="text-xl font-semibold mb-4">新增班級與學生名單</h3>
@@ -215,7 +201,6 @@
         </div>
     </div>
 
-    <!-- 彈出視窗：抽籤結果 Modal -->
     <div id="draw-result-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-30 items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center transform transition-all scale-95 opacity-0" id="draw-result-modal-content">
             <h3 class="text-2xl font-bold text-slate-600 mb-4">抽中的是...</h3>
@@ -226,7 +211,6 @@
         </div>
     </div>
     
-    <!-- 彈出視窗：確認清除資料 Modal -->
     <div id="confirm-clear-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-40 items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
             <h3 class="text-lg font-bold text-gray-900 mb-2">確認操作</h3>
@@ -237,8 +221,18 @@
             </div>
         </div>
     </div>
+    
+    <div id="confirm-action-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-40 items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <h3 id="confirm-title" class="text-lg font-bold text-gray-900 mb-2">確認操作</h3>
+            <p id="confirm-message" class="text-sm text-gray-600 mb-6">您確定要執行此操作嗎？</p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirm-action-execute-btn" class="px-6 py-2 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700">確認</button>
+                <button id="confirm-action-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">取消</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- 提示訊息框 -->
     <div id="message-box" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 p-3 bg-slate-800 text-white rounded-lg shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-30">訊息內容</div>
 
 
@@ -275,16 +269,9 @@
             return `${minutes}:${seconds}`;
         }
         
-        // --- 資安強化：清理字串以避免 XSS ---
         function sanitizeString(str) {
             if (typeof str !== 'string') return str;
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return str.replace(/[&<>"']/g, (m) => map[m]);
         }
 
@@ -308,7 +295,7 @@
                 document.getElementById('class-select').value = classData[0].class_name;
                 handleClassChange();
             } else {
-                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-500">請透過右上角的 \'+\' 按鈕新增班級資料</td></tr>';
+                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-500">請透過右上角的 \'+\' 按鈕新增班級資料</td></tr>';
             }
         }
 
@@ -398,7 +385,7 @@
             if (currentClassIndex !== -1) {
                 renderStudentList(currentClassIndex);
             } else {
-                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-500">請選擇一個班級</td></tr>';
+                document.getElementById('student-list-body').innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-500">請選擇一個班級</td></tr>';
                 document.getElementById('draw-btn').disabled = true;
                 document.getElementById('selection-status').textContent = '';
             }
@@ -407,13 +394,25 @@
         function renderStudentList(classIndex) {
             const studentListBody = document.getElementById('student-list-body');
             const students = classData[classIndex].students;
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            
             studentListBody.innerHTML = '';
+            
             if (students.length === 0) {
-                studentListBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-500">該班級沒有學生資料。</td></tr>';
+                studentListBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">該班級沒有學生資料。</td></tr>';
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
                 updateDrawButtonState([]);
                 return;
             }
+
+            let allSelected = true;
+            let someSelected = false;
+
             students.forEach(student => {
+                if(student.selected) someSelected = true;
+                if(!student.selected) allSelected = false;
+
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-sky-50/50';
                 row.innerHTML = `
@@ -448,9 +447,21 @@
                     </td>`;
                 studentListBody.appendChild(row);
             });
+
+            selectAllCheckbox.checked = allSelected;
+            selectAllCheckbox.indeterminate = !allSelected && someSelected;
+
             updateDrawButtonState(students);
         }
         
+        function toggleSelectAll(checkbox) {
+            if (currentClassIndex === -1) return;
+            const students = classData[currentClassIndex].students;
+            students.forEach(student => student.selected = checkbox.checked);
+            saveData();
+            renderStudentList(currentClassIndex);
+        }
+
         function startEdit(classIndex, studentId, field) {
             if (document.querySelector('.edit-input-field')) {
                 renderStudentList(classIndex);
@@ -516,10 +527,16 @@
             const studentIndex = classData[classIndex].students.findIndex(s => s.id === studentId);
             if (studentIndex > -1) {
                 const studentName = classData[classIndex].students[studentIndex].name;
-                classData[classIndex].students.splice(studentIndex, 1);
-                saveData();
-                showMessage(`學生 "${studentName}" 已被刪除。`);
-                renderStudentList(classIndex);
+                showConfirmationModal(
+                    '確認刪除學生', 
+                    `您確定要刪除學生 "${sanitizeString(studentName)}" 嗎？`, 
+                    () => {
+                        classData[classIndex].students.splice(studentIndex, 1);
+                        saveData();
+                        showMessage(`學生 "${studentName}" 已被刪除。`);
+                        renderStudentList(classIndex);
+                    }
+                );
             }
         }
 
@@ -528,7 +545,7 @@
             if (student) {
                 student.selected = !student.selected;
                 saveData();
-                updateDrawButtonState(classData[currentClassIndex].students);
+                renderStudentList(classIndex);
             }
         }
 
@@ -614,7 +631,8 @@
                 item.className = 'class-management-item flex justify-between items-center bg-slate-50 p-3 rounded-lg border';
                 item.innerHTML = `
                     <span class="font-semibold text-slate-700">${cls.class_name}</span>
-                    <div class="space-x-2">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="resetClassScores(${index})" class="px-3 py-1 bg-amber-500 text-white text-sm rounded hover:bg-amber-600 transition">分數歸零</button>
                         <button onclick="showAddStudentForm(${index})" class="px-3 py-1 bg-teal-500 text-white text-sm rounded hover:bg-teal-600 transition">新增學生</button>
                         <button onclick="renderEditClassForm(${index})" class="px-3 py-1 bg-sky-500 text-white text-sm rounded hover:bg-sky-600 transition">修改</button>
                         <button onclick="deleteClass(${index})" class="px-3 py-1 bg-rose-500 text-white text-sm rounded hover:bg-rose-600 transition">刪除</button>
@@ -715,13 +733,32 @@
 
         function deleteClass(index) {
             const className = classData[index].class_name;
-            classData.splice(index, 1);
-            saveData();
-            showMessage(`班級 "${className}" 已被刪除。`);
-            renderClassDropdown();
-            if (currentClassIndex === index) { handleClassChange(); } 
-            else if (currentClassIndex > index) { currentClassIndex--; }
-            renderClassManagementList();
+            showConfirmationModal(
+                '確認刪除班級',
+                `您確定要刪除班級 "${sanitizeString(className)}" 嗎？<br>所有學生資料將一併移除。`,
+                () => {
+                    classData.splice(index, 1);
+                    saveData();
+                    showMessage(`班級 "${className}" 已被刪除。`);
+                    renderClassDropdown();
+                    if (currentClassIndex === index) { handleClassChange(); } 
+                    else if (currentClassIndex > index) { currentClassIndex--; }
+                    renderClassManagementList();
+                }
+            );
+        }
+        
+        function resetClassScores(index) {
+            const className = classData[index].class_name;
+            showConfirmationModal(
+                '確認分數歸零',
+                `您確定要將班級 "${sanitizeString(className)}" 所有學生的分數歸零嗎？`,
+                () => {
+                    classData[index].students.forEach(student => student.score = 0);
+                    saveData();
+                    showMessage(`班級 "${className}" 的所有分數已歸零。`);
+                }
+            );
         }
         
         // --- 資料匯出/匯入/清除功能 ---
@@ -755,12 +792,9 @@
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    
-                    // --- Security Validation and Sanitization ---
                     if (!Array.isArray(importedData)) {
                         throw new Error("JSON 檔案格式不正確，根層級必須是陣列。");
                     }
-
                     const sanitizedData = importedData.map(cls => {
                         if (typeof cls !== 'object' || cls === null || !cls.class_name || !Array.isArray(cls.students)) {
                             throw new Error("匯入的資料中發現無效的班級結構。");
@@ -781,12 +815,10 @@
                             students: sanitizedStudents
                         };
                     });
-
                     classData = sanitizedData;
                     saveData();
                     showMessage('資料已安全匯入！頁面將會重新整理。', 3000);
                     setTimeout(() => location.reload(), 1500);
-
                 } catch (error) {
                     showMessage(`匯入失敗：${error.message}`, 5000);
                 } finally {
@@ -797,15 +829,13 @@
         }
         
         function openClearConfirmModal() {
-            const modal = document.getElementById('confirm-clear-modal');
-            modal.classList.add('flex');
-            modal.classList.remove('hidden');
+            document.getElementById('confirm-clear-modal').classList.add('flex');
+            document.getElementById('confirm-clear-modal').classList.remove('hidden');
         }
 
         function closeClearConfirmModal() {
-            const modal = document.getElementById('confirm-clear-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('confirm-clear-modal').classList.add('hidden');
+            document.getElementById('confirm-clear-modal').classList.remove('flex');
         }
 
         function executeClear() {
@@ -813,27 +843,41 @@
             showMessage('所有本機資料已清除。頁面將會重新整理。', 3000);
             setTimeout(() => location.reload(), 1500);
         }
+        
+        // --- 通用確認 Modal ---
+        function showConfirmationModal(title, message, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').innerHTML = message;
+            const confirmBtn = document.getElementById('confirm-action-execute-btn');
+            
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+            newConfirmBtn.addEventListener('click', () => {
+                onConfirm();
+                closeConfirmationModal();
+            }, { once: true });
+
+            document.getElementById('confirm-action-modal').classList.add('flex');
+            document.getElementById('confirm-action-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirm-action-modal').classList.add('hidden');
+            document.getElementById('confirm-action-modal').classList.remove('flex');
+        }
 
         // --- 計時器與音效功能 ---
         function playAlarmSound(durationInSeconds) {
             if (!audioCtx) {
                 try {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.error("Web Audio API is not supported in this browser");
-                    return;
-                }
+                } catch (e) { console.error("Web Audio API is not supported in this browser"); return; }
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             let beepCount = 0;
             const intervalId = setInterval(() => {
-                if (beepCount >= durationInSeconds * 2) { 
-                    clearInterval(intervalId);
-                    return;
-                }
+                if (beepCount >= durationInSeconds * 2) { clearInterval(intervalId); return; }
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 oscillator.connect(gainNode);
@@ -877,6 +921,7 @@
             // Modal Buttons
             document.getElementById('confirm-clear-execute-btn').onclick = executeClear;
             document.getElementById('confirm-clear-cancel-btn').onclick = closeClearConfirmModal;
+            document.getElementById('confirm-action-cancel-btn').onclick = closeConfirmationModal;
             
             // Initial Load
             loadData();
@@ -885,11 +930,9 @@
         };
     </script>
     
-    <!-- 頁尾創作者標示 -->
     <footer class="text-center py-6 mt-10">
         <p class="text-sm text-slate-500">前鎮國中資訊組</p>
     </footer>
 
 </body>
 </html>
-
