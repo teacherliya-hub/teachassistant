@@ -1525,8 +1525,8 @@
             dom.dataModalAddBtn.addEventListener('click', parseAndAddClass);
             dom.dataModalCloseBtn.addEventListener('click', closeDataModal);
             
-            dom.drawResultModal.addEventListener('click', closeDrawResultModal); // 點擊背景關閉
-            dom.drawResultModalContent.addEventListener('click', (e) => e.stopPropagation()); // 點擊內容區塊不關閉
+            dom.drawResultModal.addEventListener('click', closeDrawResultModal); 
+            dom.drawResultModalContent.addEventListener('click', (e) => e.stopPropagation()); 
             dom.drawResultModalCloseBtn.addEventListener('click', closeDrawResultModal);
             
             dom.confirmClearExecuteBtn.addEventListener('click', executeClear);
@@ -1557,5 +1557,6 @@
 
 </body>
 </html>
+
 
 
