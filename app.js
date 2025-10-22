@@ -1,24 +1,19 @@
 
 
-        // --- 全局變數 ---
         let classData = [];
         let currentClassIndex = -1;
         let isManagementViewActive = false;
         let isSeatingChartViewActive = false;
         
-        // --- DOM 元素快取 ---
         let dom = {};
 
-        // --- 計時器與音效狀態變數 ---
         let stopwatchInterval, stopwatchSeconds = 0, countdownInterval, countdownSeconds = 0, isCountdownRunning = false;
         const MAX_TIME_SECONDS = 60 * 60;
         let audioCtx;
 
-        // --- Drag & Drop State ---
         let draggedStudentId = null;
         let draggedElement = null;
 
-        // --- 工具函式 ---
         function showMessage(message, duration = 3000) {
             dom.messageBox.textContent = message;
             dom.messageBox.classList.remove('opacity-0', 'pointer-events-none');
@@ -35,9 +30,7 @@
             return `${minutes}:${seconds}`;
         }
         
-        /**
-         * XSS 防護：將字串中的 HTML 特殊字元轉換為實體
-         */
+
         function sanitizeString(str) {
             if (str === null || typeof str === 'undefined') return '';
             if (typeof str !== 'string' && typeof str !== 'number') return '';
@@ -47,42 +40,37 @@
         }
 
 
-        // --- 核心視圖管理 ---
-        /**
-         * 根據目前的狀態變數 (isSeatingChartViewActive, isManagementViewActive, currentClassIndex)
-         * 更新整個頁面的顯示內容
-         */
+
         function updateView() {
-            // 1. 隱藏所有主要視圖
+                
             dom.mainContentView.classList.add('hidden');
             dom.seatingChartView.classList.add('hidden');
             
-            // 2. 隱藏 main 內部的子視圖
             dom.studentListArea.classList.add('hidden');
             dom.classManagementArea.classList.add('hidden');
 
             if (isSeatingChartViewActive) {
-                // --- 顯示座位表 ---
-                dom.seatingChartView.classList.remove('hidden');
+                    
+                    dom.seatingChartView.classList.remove('hidden');
                 if (currentClassIndex !== -1) {
                     renderSeatingChart();
                 }
             } else if (isManagementViewActive) {
-                // --- 顯示班級管理 ---
-                dom.mainContentView.classList.remove('hidden');
+
+                    dom.mainContentView.classList.remove('hidden');
                 dom.classManagementArea.classList.remove('hidden');
                 if (currentClassIndex !== -1) {
                     renderClassManagementList();
                 }
             } else {
-                // --- 預設顯示：學生列表 ---
-                dom.mainContentView.classList.remove('hidden');
+
+                    dom.mainContentView.classList.remove('hidden');
                 dom.studentListArea.classList.remove('hidden');
                 if (currentClassIndex !== -1) {
                     renderStudentList(currentClassIndex);
                 } else {
-                    // 沒有班級資料或未選擇
-                    dom.studentListBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-500">請透過右上角的 \'+\' 按鈕新增班級資料</td></tr>';
+
+                        dom.studentListBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-500">請透過右上角的 \'+\' 按鈕新增班級資料</td></tr>';
                     dom.drawBtn.disabled = true;
                     if(dom.selectionStatus) dom.selectionStatus.textContent = '';
                     if(dom.selectAllCheckbox) {
@@ -92,25 +80,24 @@
                 }
             }
             
-            // 3. 同步兩個班級下拉選單
             if (currentClassIndex !== -1 && classData[currentClassIndex]) {
                 const className = classData[currentClassIndex].class_name;
                 dom.classSelect.value = className;
                 dom.classSelectSeating.value = className;
             } else if (classData.length === 0) {
-                 renderClassDropdown(); // 確保顯示「請新增班級」
+                 renderClassDropdown(); 
+                    
             }
         }
 
 
-        // --- 資料管理與儲存 ---
         function loadData() {
             const savedData = localStorage.getItem('classAssistantData');
             if (savedData) {
                 try {
                     classData = JSON.parse(savedData);
-                    // 確保舊資料有 seating_chart 屬性
-                    classData.forEach(cls => {
+
+                        classData.forEach(cls => {
                         if (!cls.seating_chart) {
                             cls.seating_chart = { rows: 6, cols: 7, seats: {} };
                         }
@@ -124,7 +111,7 @@
                 classData = [];
             }
             
-            renderClassDropdown(); // 填充下拉選單
+            renderClassDropdown(); 
             
             if (classData.length > 0) {
                 const lastSelected = localStorage.getItem('lastSelectedClass');
@@ -134,7 +121,7 @@
                 currentClassIndex = -1;
             }
             
-            updateView(); // 根據載入的資料更新畫面
+            updateView(); 
         }
 
         function saveData() {
@@ -159,16 +146,15 @@
             const newClass = {
                 class_name: className,
                 students: students.sort((a, b) => a.id - b.id),
-                seating_chart: { rows: 6, cols: 7, seats: {} } // Initialize seating chart
+                seating_chart: { rows: 6, cols: 7, seats: {} } 
             };
             classData.push(newClass);
             
-            // 自動選擇新班級
             currentClassIndex = classData.length - 1;
             saveData();
             renderClassDropdown();
             
-            updateView(); // 更新畫面
+            updateView(); 
             
             closeDataModal();
             dom.newClassName.value = '';
@@ -203,7 +189,6 @@
         }
 
 
-        // --- UI 渲染與互動 (Refactored) ---
         function renderClassDropdown() {
             const selectMain = dom.classSelect;
             const selectSeating = dom.classSelectSeating;
@@ -251,25 +236,24 @@
         function handleClassChange() {
             const className = dom.classSelect.value;
             currentClassIndex = classData.findIndex(cls => cls.class_name === className);
-            saveData(); // 儲存最後選擇
+            saveData(); 
             updateView();
         }
         
-        // --- SEATING CHART FUNCTIONS ---
         function toggleSeatingChartView() {
             if (currentClassIndex === -1 && !isSeatingChartViewActive) {
                 showMessage('請先選擇一個班級再進入座位表功能。');
                 return;
             }
             isSeatingChartViewActive = !isSeatingChartViewActive;
-            isManagementViewActive = false; // 互斥
+            isManagementViewActive = false; 
             updateView();
         }
         
         function renderSeatingChart() {
             if (currentClassIndex === -1) {
                 isSeatingChartViewActive = false;
-                updateView(); // 狀態異常，退回主畫面
+                updateView(); 
                 return;
             }
 
@@ -296,7 +280,6 @@
             block.className = 'student-block';
             block.draggable = true;
             block.dataset.studentId = student.id;
-            // XSS Safe: 使用 sanitizeString 確保內容安全
             block.innerHTML = `${sanitizeString(student.id)}<br>${sanitizeString(student.name)}`;
             block.addEventListener('dragstart', handleDragStart);
             block.addEventListener('dragend', handleDragEnd);
@@ -318,7 +301,6 @@
             grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
             header.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
-            // 產生排數標頭
             for (let c = 1; c <= cols; c++) {
                  const headerCell = document.createElement('div');
                  headerCell.className = "text-center font-semibold text-blue-700";
@@ -326,7 +308,6 @@
                  header.appendChild(headerCell);
             }
 
-            // 產生座位
             let seatCounter = 1;
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
@@ -345,13 +326,13 @@
                         if (student) {
                             seat.appendChild(createStudentBlock(student));
                         } else {
-                            // 學生資料可能已被刪除，清除這個無效的座位紀錄
+                                
                             delete seats[seatKey];
                             saveData();
                         }
                     }
-                    
-                    // 如果座位是空的，顯示座位號
+
+                        
                     if (!seat.hasChildNodes()) {
                         const seatNumber = document.createElement('span');
                         seatNumber.className = 'text-4xl font-bold text-blue-200 select-none';
@@ -377,7 +358,7 @@
             const oldSeats = currentClass.seating_chart.seats;
 
             const confirmAndGenerate = () => {
-                currentClass.seating_chart = { rows, cols, seats: {} }; // 清空座位
+                currentClass.seating_chart = { rows, cols, seats: {} }; 
                 saveData();
                 renderSeatingChart();
                 showMessage('已產生新的座位表。');
@@ -413,13 +394,12 @@
             );
         }
         
-        // --- Drag and Drop Handlers (Refactored) ---
         function handleDragStart(e) {
             draggedElement = e.target;
             draggedStudentId = parseInt(e.target.dataset.studentId);
             e.dataTransfer.setData('text/plain', draggedStudentId);
-            // 延遲是為了讓瀏覽器有時間擷取拖曳影像
-            setTimeout(() => {
+
+                setTimeout(() => {
                 e.target.classList.add('dragging');
             }, 0);
         }
@@ -431,7 +411,6 @@
             draggedElement = null;
             draggedStudentId = null;
             
-            // 清除所有 drag-over 狀態
             document.querySelectorAll('.seat.drag-over').forEach(el => el.classList.remove('drag-over'));
         }
         
@@ -463,7 +442,6 @@
             const currentClass = classData[currentClassIndex];
             const seats = currentClass.seating_chart.seats;
             
-            // 1. 找出被拖曳學生 (A) 的舊座位 (如果有的話)
             let oldKeyA = null;
             for (const key in seats) {
                 if (seats[key] === draggedStudentId) {
@@ -472,24 +450,19 @@
                 }
             }
             
-            // 2. 找出目標座位上的學生 (B) (如果有的話)
             const studentIdB = seats[targetKey];
             
-            // 3. 清除學生 A 的舊座位
             if (oldKeyA) {
                 delete seats[oldKeyA];
             }
             
-            // 4. 清除學生 B 的座位 (學生 B 會被 T 回未排座位區)
             if (studentIdB) {
                  delete seats[targetKey];
             }
             
-            // 5. 將學生 A 放到新座位
             seats[targetKey] = draggedStudentId;
             
             saveData();
-            // 重新渲染，確保「未排座位區」和「座位區」同步
             renderSeatingChart();
         }
         
@@ -497,7 +470,6 @@
             e.preventDefault();
              if (!draggedStudentId) return;
 
-            // 找出被拖曳學生的舊座位並清除
             const currentClass = classData[currentClassIndex];
             const seats = currentClass.seating_chart.seats;
             for (const key in seats) {
@@ -511,16 +483,15 @@
             renderSeatingChart();
         }
 
-        /* --- STUDENT LIST & MANAGEMENT FUNCTIONS --- */
         function renderStudentList(classIndex) {
-            const studentListBody = dom.studentListBody; // 使用快取
+            const studentListBody = dom.studentListBody; 
             const students = classData[classIndex].students;
             
             studentListBody.innerHTML = '';
             
             if (students.length === 0) {
                 studentListBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">該班級沒有學生資料。</td></tr>';
-                updateSelectAllCheckboxState(); // 更新全選框
+                updateSelectAllCheckboxState(); 
                 updateDrawButtonState([]);
                 return;
             }
@@ -529,12 +500,10 @@
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-sky-50/50';
                 
-                // XSS Safe: 使用 sanitizeString 確保所有顯示的資料都是安全的
                 const safeId = sanitizeString(student.id);
                 const safeName = sanitizeString(student.name);
                 const safeScore = sanitizeString(student.score);
 
-                // 這些 onclick 仍保留，因為它們是動態產生的
                 row.innerHTML = `
                     <td class="px-4 py-3"><input type="checkbox" class="h-5 w-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer" ${student.selected ? 'checked' : ''} onchange="toggleStudentSelection(${classIndex}, ${student.id})"></td>
                     <td class="px-4 py-3 text-sm text-slate-600">
@@ -568,15 +537,12 @@
                 studentListBody.appendChild(row);
             });
 
-            // - OPTIMIZATION: Logic moved to its own function -
             updateSelectAllCheckboxState(); 
             updateDrawButtonState(students);
         }
         
-        /**
-         * [OPTIMIZATION HELPER]
-         * 根據 classData 更新「全選」核取方塊的狀態 (checked / indeterminate)
-         */
+       
+
         function updateSelectAllCheckboxState() {
              if (currentClassIndex === -1) {
                 dom.selectAllCheckbox.checked = false;
@@ -601,38 +567,26 @@
             dom.selectAllCheckbox.indeterminate = !allSelected && someSelected;
         }
 
-        /**
-         * [OPTIMIZATION]
-         * 勾選「全選」時，不再重繪整個列表，
-         * 而是手動更新 data 和 UI 上的 checkboxes。
-         */
+        
         function toggleSelectAll(checkbox) {
             if (currentClassIndex === -1) return;
             const isChecked = checkbox.checked;
             const students = classData[currentClassIndex].students;
             
-            // 1. 更新資料
             students.forEach(student => student.selected = isChecked);
             saveData();
 
-            // 2. 手動更新 UI 上的核取方塊
             const visibleCheckboxes = dom.studentListBody.querySelectorAll('input[type="checkbox"]');
             visibleCheckboxes.forEach(cb => cb.checked = isChecked);
 
-            // 3. 更新抽籤按鈕
             updateDrawButtonState(students);
         }
 
-        /**
-         * [OPTIMIZATION]
-         * 重寫 `startEdit` 以使用 DOM manipulation (createElement) 
-         * 而不是 innerHTML，提高穩定性。
-         */
+     
         function startEdit(classIndex, studentId, field) {
-            // 如果已有欄位在編輯中，強制重繪列表以取消該次編輯
             if (document.querySelector('.edit-input-field')) {
                 renderStudentList(classIndex);
-                return; // 等待重繪完成
+                return; 
             }
             
             const student = classData[classIndex].students.find(s => s.id === studentId);
@@ -640,48 +594,40 @@
 
             const safeId = sanitizeString(student.id);
             const displayElement = document.getElementById(`${field}-display-${safeId}`);
-            if (!displayElement) return; // 找不到元素
+            if (!displayElement) return; 
 
             const parentContainer = displayElement.parentElement;
             const originalValue = student[field];
 
-            // 1. 建立 Input 元素
             const inputElement = document.createElement('input');
             inputElement.type = (field === 'id' ? 'number' : 'text');
-            inputElement.value = sanitizeString(originalValue); // 顯示時消毒
+            inputElement.value = sanitizeString(originalValue); 
             inputElement.className = 'edit-input-field p-1 border border-sky-500 rounded text-sm w-full focus:outline-none';
 
-            // 2. 綁定事件
             const saveAndRestore = () => {
-                // `saveEdit` 會在儲存後呼叫 `renderStudentList` 來還原列表
-                saveEdit(classIndex, studentId, field, inputElement.value);
+
+                    
+            saveEdit(classIndex, studentId, field, inputElement.value);
             };
 
             inputElement.addEventListener('blur', saveAndRestore);
             inputElement.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
-                    inputElement.blur(); // 觸發 blur 事件
+                    inputElement.blur(); 
                 } else if (event.key === 'Escape') {
-                    // 取消編輯，直接重繪列表
                     renderStudentList(classIndex);
                 }
             });
 
-            // 3. 替換 DOM
             parentContainer.replaceChild(inputElement, displayElement);
             inputElement.focus();
             inputElement.select();
         }
         
-        /**
-         * [MODIFIED]
-         * 移除 onCompleteCallback，統一在儲存後呼叫 renderStudentList
-         * 這樣能確保 ID 排序變更時列表也能正確更新。
-         */
+
         function saveEdit(classIndex, studentId, field, newValue) {
             const student = classData[classIndex].students.find(s => s.id === studentId);
             
-            // 標記是否需要儲存（避免在未變更時也儲存）
             let needsSave = false;
             
             if (student) {
@@ -697,13 +643,13 @@
                         showMessage('座號已存在', 3000);
                     } else if (newId !== student.id) {
                         student.id = newId;
-                        classData[classIndex].students.sort((a, b) => a.id - b.id); // ID 變更，重新排序
+                        classData[classIndex].students.sort((a, b) => a.id - b.id); 
                         needsSave = true;
                         showMessage('座號更新成功', 2000);
                     }
                 } else if (field === 'name') {
                     if (newValue !== student.name) {
-                        student.name = newValue; // 儲存原始純文字
+                        student.name = newValue; 
                         needsSave = true;
                         showMessage('姓名更新成功', 2000);
                     }
@@ -714,7 +660,6 @@
                 saveData();
             }
 
-            // 統一重繪列表以還原 UI (無論是否儲存成功，都要還原 input -> span)
             renderStudentList(classIndex);
         }
 
@@ -722,7 +667,6 @@
             const student = classData[classIndex].students.find(s => s.id === studentId);
             if (student) {
                 student.score += delta;
-                // 這裡使用 document.getElementById 是必要的
                 document.getElementById(`score-${studentId}`).textContent = sanitizeString(student.score);
                 saveData();
             }
@@ -737,8 +681,9 @@
                     `您確定要刪除學生 "${sanitizeString(studentName)}" 嗎？`, 
                     () => {
                         classData[classIndex].students.splice(studentIndex, 1);
-                        // 從座位表中移除
-                        const seats = classData[classIndex].seating_chart.seats;
+
+                            
+                            const seats = classData[classIndex].seating_chart.seats;
                         for (const key in seats) {
                              if (seats[key] === studentId) {
                                 delete seats[key];
@@ -746,29 +691,25 @@
                         }
                         saveData();
                         showMessage(`學生 "${sanitizeString(studentName)}" 已被刪除。`);
-                        renderStudentList(classIndex); // 直接 render
+                        renderStudentList(classIndex); 
                     }
                 );
             }
         }
 
-        /**
-         * [OPTIMIZATION]
-         * 勾選單一學生時，不再重繪整個列表，
-         * 僅更新 data 和必要的 UI 狀態。
-         */
+       
         function toggleStudentSelection(classIndex, studentId) {
             const student = classData[classIndex].students.find(s => s.id === studentId);
             if (student) {
                 student.selected = !student.selected;
                 saveData();
                 
-                // --- 不再呼叫 renderStudentList() ---
-                
-                // 1. 更新全選框狀態
+
+                    
                 updateSelectAllCheckboxState();
-                // 2. 更新抽籤按鈕狀態
-                updateDrawButtonState(classData[classIndex].students);
+
+                    
+                    updateDrawButtonState(classData[classIndex].students);
             }
         }
 
@@ -792,7 +733,7 @@
 
             const animationInterval = setInterval(() => {
                 const tempStudent = selectedStudents[Math.floor(Math.random() * selectedStudents.length)];
-                resultDisplay.textContent = tempStudent.name; // textContent is XSS safe
+                resultDisplay.textContent = tempStudent.name; 
                 resultDisplay.className = `font-extrabold text-4xl sm:text-5xl rounded-lg mb-4 py-8 shadow-inner text-center ${vibrantColors[colorIndex][0]} ${vibrantColors[colorIndex][1]}`;
                 colorIndex = (colorIndex + 1) % vibrantColors.length;
             }, 100);
@@ -801,7 +742,7 @@
                 clearInterval(animationInterval);
                 const drawnStudent = selectedStudents[Math.floor(Math.random() * selectedStudents.length)];
                 
-                dom.modalWinnerName.textContent = drawnStudent.name; // textContent is XSS safe
+                dom.modalWinnerName.textContent = drawnStudent.name; 
                 
                 dom.drawResultModal.classList.remove('hidden');
                 dom.drawResultModal.classList.add('flex');
@@ -821,10 +762,9 @@
             }, 200);
         }
 
-        // --- 班級管理功能 ---
         function toggleManagementView() {
             isManagementViewActive = !isManagementViewActive;
-            isSeatingChartViewActive = false; // 互斥
+            isSeatingChartViewActive = false; 
             updateView();
         }
 
@@ -847,7 +787,6 @@
                 
                 const safeClassName = sanitizeString(cls.class_name);
                 
-                // 這些 onclick 仍保留
                 item.innerHTML = `
                     <span class="font-semibold text-slate-700">${safeClassName}</span>
                     <div class="flex items-center space-x-2">
@@ -863,7 +802,7 @@
         }
         
         function showAddStudentForm(index) {
-            renderClassManagementList(); // Reset view to close other forms
+            renderClassManagementList(); 
             const classItemWrapper = dom.classManagementContent.querySelectorAll('.class-management-item-wrapper')[index];
             const formHtml = `
                 <div class="mt-2 p-3 bg-slate-100 rounded-lg border">
@@ -879,7 +818,7 @@
         }
 
         function addStudentsToClass(index) {
-            const inputElement = document.getElementById(`new-students-input-${index}`); // 動態 ID
+            const inputElement = document.getElementById(`new-students-input-${index}`); 
             const textInput = inputElement.value.trim();
             if (!textInput) return showMessage('請輸入學生資料');
 
@@ -934,8 +873,8 @@
         
         function saveClassChanges(index) {
             const oldClassName = classData[index].class_name;
-            const newClassName = document.getElementById('edit-class-name').value.trim(); // 動態
-            const studentListText = document.getElementById('edit-student-list').value.trim(); // 動態
+            const newClassName = document.getElementById('edit-class-name').value.trim(); 
+            const studentListText = document.getElementById('edit-student-list').value.trim(); 
             
             if (!newClassName) return showMessage('班級名稱不可為空。');
             if (newClassName !== oldClassName && classData.some(cls => cls.class_name === newClassName)) {
@@ -954,8 +893,9 @@
             if (errors > 0) showMessage(`警告：儲存過程中忽略了 ${errors} 行無效資料。`, 6000);
             
             renderClassDropdown();
-            // 確保選中的是新名稱
-            dom.classSelect.value = newClassName;
+
+                
+                dom.classSelect.value = newClassName;
             dom.classSelectSeating.value = newClassName;
 
             renderClassManagementList();
@@ -969,12 +909,9 @@
                 () => {
                     classData.splice(index, 1);
                     
-                    // 決定下一個選中的班級
                     if (currentClassIndex === index) {
-                        // 如果刪除的是當前選中的，選第一個
                         currentClassIndex = classData.length > 0 ? 0 : -1;
                     } else if (currentClassIndex > index) {
-                        // 如果刪除的是前面的，index - 1
                         currentClassIndex--;
                     }
                     
@@ -982,7 +919,7 @@
                     showMessage(`班級 "${sanitizeString(className)}" 已被刪除。`);
                     
                     renderClassDropdown();
-                    updateView(); // 統一更新
+                    updateView(); 
                 }
             );
         }
@@ -1003,7 +940,6 @@
             );
         }
         
-        // --- 資料匯出/匯入/清除功能 ---
         function exportData() {
             if (classData.length === 0) {
                 showMessage('沒有資料可以匯出。', 3000);
@@ -1076,7 +1012,7 @@
                 } catch (error) {
                     showMessage(`匯入失敗：${error.message}`, 5000);
                 } finally {
-                    event.target.value = null; // 重設 input
+                    event.target.value = null; 
                 }
             };
             reader.readAsText(file);
@@ -1099,15 +1035,14 @@
             setTimeout(() => location.reload(), 1500);
         }
         
-        // --- 通用確認 Modal ---
         function showConfirmationModal(title, message, onConfirm) {
             dom.confirmTitle.textContent = title;
-            dom.confirmMessage.innerHTML = message; // 假設 message 總是安全的 (來自 sanitizeString)
+            dom.confirmMessage.innerHTML = message; 
             const confirmBtn = dom.confirmActionExecuteBtn;
             
             const newConfirmBtn = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-            dom.confirmActionExecuteBtn = newConfirmBtn; // 更新快取
+            dom.confirmActionExecuteBtn = newConfirmBtn; 
 
             newConfirmBtn.addEventListener('click', () => {
                 onConfirm();
@@ -1123,7 +1058,6 @@
             dom.confirmActionModal.classList.remove('flex');
         }
 
-        // --- 計時器與音效功能 ---
         function playAlarmSound(durationInSeconds) {
             if (!audioCtx) {
                 try {
@@ -1155,23 +1089,21 @@
         function startCountdown() { if(!isCountdownRunning&&countdownSeconds>0){ isCountdownRunning=true; countdownInterval=setInterval(()=>{if(countdownSeconds>0){ countdownSeconds--; dom.countdownDisplay.textContent=formatTime(countdownSeconds);} else { stopCountdown(); dom.countdownDisplay.textContent='00:00'; showMessage('倒數計時結束！',5000); document.body.classList.add('bg-rose-200'); playAlarmSound(5); setTimeout(()=>document.body.classList.remove('bg-rose-200'),300);}},1000); showMessage('倒數計時開始');} else if (countdownSeconds<=0) showMessage('請先設定時間');}
         function stopCountdown() { clearInterval(countdownInterval); countdownInterval = null; isCountdownRunning = false; showMessage('倒數計時已停止'); }
 
-        // --- UI 顯示/隱藏切換 ---
         function toggleTimerDisplay(timerType) { const s=dom.stopwatchArea, c=dom.countdownArea; if(timerType==='stopwatch'){ if(s.classList.toggle('hidden')) s.classList.remove('flex'); else { c.classList.add('hidden'); c.classList.remove('flex'); stopCountdown(); s.classList.add('flex'); } } else { if(c.classList.toggle('hidden')) c.classList.remove('flex'); else { s.classList.add('hidden'); s.classList.remove('flex'); stopStopwatch(); c.classList.add('flex'); } } }
         function openCreationModal() { dom.dataModal.classList.add('flex'); dom.dataModal.classList.remove('hidden'); dom.newClassName.value = ''; dom.studentListInput.value = ''; }
         function closeDataModal() { dom.dataModal.classList.add('hidden'); dom.dataModal.classList.remove('flex'); }
 
-        // --- 初始化應用程式 ---
         window.onload = function() {
-            // --- DOM 元素快取 ---
-            dom = {
-                // Nav
+
+                dom = {
+                
                 toggleStopwatchBtn: document.getElementById('toggle-stopwatch-btn'),
                 toggleCountdownBtn: document.getElementById('toggle-countdown-btn'),
                 toggleSeatingChartBtn: document.getElementById('toggle-seating-chart-btn'),
                 toggleManagementBtn: document.getElementById('toggle-management-btn'),
                 addClassModalBtn: document.getElementById('add-class-modal-btn'),
                 
-                // Timers
+                
                 stopwatchArea: document.getElementById('stopwatch-area'),
                 countdownArea: document.getElementById('countdown-area'),
                 stopwatchDisplay: document.getElementById('stopwatch-display'),
@@ -1185,19 +1117,19 @@
                 countdownStartBtn: document.getElementById('countdown-start-btn'),
                 countdownStopBtn: document.getElementById('countdown-stop-btn'),
 
-                // Main Content
+                
                 mainContentView: document.getElementById('main-content-view'),
                 classSelect: document.getElementById('class-select'),
                 drawBtn: document.getElementById('draw-btn'),
                 drawResult: document.getElementById('draw-result'),
                 selectionStatus: document.getElementById('selection-status'),
                 
-                // Student List
+               
                 studentListArea: document.getElementById('student-list-area'),
                 studentListBody: document.getElementById('student-list-body'),
                 selectAllCheckbox: document.getElementById('select-all-checkbox'),
                 
-                // Class Management
+                
                 classManagementArea: document.getElementById('class-management-area'),
                 classManagementContent: document.getElementById('class-management-content'),
                 exportDataBtn: document.getElementById('export-data-btn'),
@@ -1205,7 +1137,7 @@
                 clearDataBtn: document.getElementById('clear-data-btn'),
                 importFileInput: document.getElementById('import-file-input'),
 
-                // Seating Chart
+                
                 seatingChartView: document.getElementById('seating-chart-view'),
                 classSelectSeating: document.getElementById('class-select-seating'),
                 unseatedStudentsList: document.getElementById('unseated-students-list'),
@@ -1216,7 +1148,7 @@
                 generateSeatGridBtn: document.getElementById('generate-seat-grid-btn'),
                 resetSeatingChartBtn: document.getElementById('reset-seating-chart-btn'),
                 
-                // Modals
+                
                 dataModal: document.getElementById('data-modal'),
                 newClassName: document.getElementById('new-class-name'),
                 studentListInput: document.getElementById('student-list-input'),
@@ -1241,35 +1173,35 @@
                 messageBox: document.getElementById('message-box'),
             };
 
-            // --- 綁定靜態事件監聽 ---
             
-            // Nav
+            
+            
             dom.toggleStopwatchBtn.addEventListener('click', () => toggleTimerDisplay('stopwatch'));
             dom.toggleCountdownBtn.addEventListener('click', () => toggleTimerDisplay('countdown'));
             dom.toggleSeatingChartBtn.addEventListener('click', toggleSeatingChartView);
             dom.toggleManagementBtn.addEventListener('click', toggleManagementView);
             dom.addClassModalBtn.addEventListener('click', openCreationModal);
 
-            // Class Selects
+            
             dom.classSelect.addEventListener('change', handleClassChange);
             dom.classSelectSeating.addEventListener('change', handleSeatingClassChange);
             
-            // Draw
+            
             dom.drawBtn.addEventListener('click', drawStudent);
             
-            // Seating Chart
+            
             dom.generateSeatGridBtn.addEventListener('click', handleGenerateGrid);
             dom.resetSeatingChartBtn.addEventListener('click', resetSeatingChart);
             dom.unseatedStudentsList.addEventListener('dragover', handleDragOver);
             dom.unseatedStudentsList.addEventListener('drop', handleDropOnUnseated);
 
-            // Management
+            
             dom.exportDataBtn.addEventListener('click', exportData);
             dom.importDataBtn.addEventListener('click', importData);
             dom.importFileInput.addEventListener('change', handleFileSelect);
             dom.clearDataBtn.addEventListener('click', openClearConfirmModal);
 
-            // Modals
+            
             dom.dataModalAddBtn.addEventListener('click', parseAndAddClass);
             dom.dataModalCloseBtn.addEventListener('click', closeDataModal);
             
@@ -1282,7 +1214,7 @@
             
             dom.confirmActionCancelBtn.addEventListener('click', closeConfirmationModal);
             
-            // Timers
+            
             dom.stopwatchStartBtn.addEventListener('click', startStopwatch);
             dom.stopwatchStopBtn.addEventListener('click', stopStopwatch);
             dom.stopwatchResetBtn.addEventListener('click', resetStopwatch);
@@ -1290,9 +1222,8 @@
             dom.countdownStartBtn.addEventListener('click', startCountdown);
             dom.countdownStopBtn.addEventListener('click', stopCountdown);
             
-            // --- Initial Load ---
-            // 設定倒數計時器預設為 5 分鐘
-            countdownSeconds = 300; // 5 * 60
+            
+            countdownSeconds = 300; 
             dom.countdownDisplay.textContent = formatTime(countdownSeconds);
             dom.countdownMinutes.value = 5;
             dom.countdownSeconds.value = 0;
@@ -1300,3 +1231,4 @@
             loadData();
         };
     
+
