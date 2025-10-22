@@ -39,7 +39,7 @@
         .student-block {
             /* 調整 padding 和 min-height 以適應縮小的座位 */
             @apply p-1 border border-teal-400 rounded-md cursor-grab bg-teal-100 text-teal-800 text-lg font-medium flex items-center justify-center text-center shadow;
-            min-height: 60px; /* 確保在未排座位區也有足夠高度 */
+            min-height: 60px; /* 確保在未排座位區燜g有足夠高度 */
         }
         .student-block.dragging { @apply opacity-50 shadow-lg scale-105; }
         
@@ -59,9 +59,17 @@
 
     <nav class="bg-sky-700 shadow-lg sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <h1 class="text-xl font-bold text-white">前鎮國中課堂助手</h1>
-                <div class="flex items-center space-x-4">
+            <!-- 
+              RWD MODIFIED: 
+              - h-16 -> h-auto md:h-16 (自動高度，桌機才固定)
+              - flex justify-between items-center -> flex flex-col md:flex-row md:justify-between md:items-center (手機垂直堆疊，桌機水平)
+              - py-3 md:py-0 (手機上下留白，桌機歸零)
+            -->
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center h-auto md:h-16 py-3 md:py-0">
+                <!-- RWD MODIFIED: self-center md:self-auto (手機置中，桌機自動) -->
+                <h1 class="text-xl font-bold text-white self-center md:self-auto">前鎮國中課堂助手</h1>
+                <!-- RWD MODIFIED: self-center md:self-auto (手機置中) | mt-3 md:mt-0 (手機增加上間距) -->
+                <div class="flex items-center space-x-4 self-center md:self-auto mt-3 md:mt-0">
                     <button id="toggle-stopwatch-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="計時器">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -151,7 +159,7 @@
                         <thead class="bg-slate-50 sticky top-0">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/12">
-                                    <input type="checkbox" id="select-all-checkbox" class="h-5 w-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer">
+                                    <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this)" class="h-5 w-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer">
                                 </th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-2/12">座號</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-4/12">姓名</th>
@@ -187,7 +195,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-8 gap-6">
             <!-- Left Panel: Unseated Students (1 column) -->
             <div class="lg:col-span-1 bg-white p-4 rounded-xl shadow-lg border border-sky-200/50">
-                <h2 class="text-xl font-semibold text-sky-800 mb-2 pb-2 border-b">尚未排座位</h2>
+                <h2 class="text-xl font-semibold text-sky-800 mb-2 pb-2 border-b">未排座位</h2>
                  <!-- Seating chart class select -->
                 <div class="mb-4">
                     <label for="class-select-seating" class="block text-sm font-medium text-slate-700 mb-1">目前班級：</label>
@@ -372,7 +380,10 @@
                     dom.studentListBody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-500">請透過右上角的 \'+\' 按鈕新增班級資料</td></tr>';
                     dom.drawBtn.disabled = true;
                     if(dom.selectionStatus) dom.selectionStatus.textContent = '';
-                    if(dom.selectAllCheckbox) dom.selectAllCheckbox.checked = false;
+                    if(dom.selectAllCheckbox) {
+                        dom.selectAllCheckbox.checked = false;
+                        dom.selectAllCheckbox.indeterminate = false;
+                    }
                 }
             }
             
@@ -423,7 +434,7 @@
 
         function saveData() {
             localStorage.setItem('classAssistantData', JSON.stringify(classData));
-            if (currentClassIndex !== -1) {
+            if (currentClassIndex !== -1 && classData[currentClassIndex]) {
                  localStorage.setItem('lastSelectedClass', classData[currentClassIndex].class_name);
             }
         }
@@ -799,25 +810,17 @@
         function renderStudentList(classIndex) {
             const studentListBody = dom.studentListBody; // 使用快取
             const students = classData[classIndex].students;
-            const selectAllCheckbox = dom.selectAllCheckbox; // 使用快取
             
             studentListBody.innerHTML = '';
             
             if (students.length === 0) {
                 studentListBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">該班級沒有學生資料。</td></tr>';
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
+                updateSelectAllCheckboxState(); // 更新全選框
                 updateDrawButtonState([]);
                 return;
             }
 
-            let allSelected = true;
-            let someSelected = false;
-
             students.forEach(student => {
-                if(student.selected) someSelected = true;
-                if(!student.selected) allSelected = false;
-
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-sky-50/50';
                 
@@ -860,75 +863,153 @@
                 studentListBody.appendChild(row);
             });
 
-            selectAllCheckbox.checked = allSelected;
-            selectAllCheckbox.indeterminate = !allSelected && someSelected;
-
+            // - OPTIMIZATION: Logic moved to its own function -
+            updateSelectAllCheckboxState(); 
             updateDrawButtonState(students);
         }
         
-        function toggleSelectAll(checkbox) {
-            if (currentClassIndex === -1) return;
+        /**
+         * [OPTIMIZATION HELPER]
+         * 根據 classData 更新「全選」核取方塊的狀態 (checked / indeterminate)
+         */
+        function updateSelectAllCheckboxState() {
+             if (currentClassIndex === -1) {
+                dom.selectAllCheckbox.checked = false;
+                dom.selectAllCheckbox.indeterminate = false;
+                return;
+             }
             const students = classData[currentClassIndex].students;
-            students.forEach(student => student.selected = checkbox.checked);
-            saveData();
-            renderStudentList(currentClassIndex); // 直接呼叫 render
+            if (students.length === 0) {
+                dom.selectAllCheckbox.checked = false;
+                dom.selectAllCheckbox.indeterminate = false;
+                return;
+            }
+
+            let allSelected = true;
+            let someSelected = false;
+            students.forEach(student => {
+                if (student.selected) someSelected = true;
+                if (!student.selected) allSelected = false;
+            });
+
+            dom.selectAllCheckbox.checked = allSelected;
+            dom.selectAllCheckbox.indeterminate = !allSelected && someSelected;
         }
 
+        /**
+         * [OPTIMIZATION]
+         * 勾選「全選」時，不再重繪整個列表，
+         * 而是手動更新 data 和 UI 上的 checkboxes。
+         */
+        function toggleSelectAll(checkbox) {
+            if (currentClassIndex === -1) return;
+            const isChecked = checkbox.checked;
+            const students = classData[currentClassIndex].students;
+            
+            // 1. 更新資料
+            students.forEach(student => student.selected = isChecked);
+            saveData();
+
+            // 2. 手動更新 UI 上的核取方塊
+            const visibleCheckboxes = dom.studentListBody.querySelectorAll('input[type="checkbox"]');
+            visibleCheckboxes.forEach(cb => cb.checked = isChecked);
+
+            // 3. 更新抽籤按鈕
+            updateDrawButtonState(students);
+        }
+
+        /**
+         * [OPTIMIZATION]
+         * 重寫 `startEdit` 以使用 DOM manipulation (createElement) 
+         * 而不是 innerHTML，提高穩定性。
+         */
         function startEdit(classIndex, studentId, field) {
+            // 如果已有欄位在編輯中，強制重繪列表以取消該次編輯
             if (document.querySelector('.edit-input-field')) {
                 renderStudentList(classIndex);
+                return; // 等待重繪完成
             }
+            
             const student = classData[classIndex].students.find(s => s.id === studentId);
             if (!student) return;
-            
-            // 這裡使用 document.getElementById 是必要的，因為 ID 是動態產生的
-            const displayElement = document.getElementById(`${field}-display-${studentId}`);
+
+            const safeId = sanitizeString(student.id);
+            const displayElement = document.getElementById(`${field}-display-${safeId}`);
+            if (!displayElement) return; // 找不到元素
+
             const parentContainer = displayElement.parentElement;
-            
             const originalValue = student[field];
-            
-            parentContainer.innerHTML = `
-                <input type="${field === 'id' ? 'number' : 'text'}" 
-                       value="${sanitizeString(originalValue)}" 
-                       class="edit-input-field p-1 border border-sky-500 rounded text-sm w-full focus:outline-none"
-                       onblur="saveEdit(${classIndex}, ${student.id}, '${field}', this.value)"
-                       onkeydown="if(event.key === 'Enter') this.blur(); if(event.key === 'Escape') renderStudentList(${classIndex});">
-            `;
-            const inputElement = parentContainer.querySelector('input');
+
+            // 1. 建立 Input 元素
+            const inputElement = document.createElement('input');
+            inputElement.type = (field === 'id' ? 'number' : 'text');
+            inputElement.value = sanitizeString(originalValue); // 顯示時消毒
+            inputElement.className = 'edit-input-field p-1 border border-sky-500 rounded text-sm w-full focus:outline-none';
+
+            // 2. 綁定事件
+            const saveAndRestore = () => {
+                // `saveEdit` 會在儲存後呼叫 `renderStudentList` 來還原列表
+                saveEdit(classIndex, studentId, field, inputElement.value);
+            };
+
+            inputElement.addEventListener('blur', saveAndRestore);
+            inputElement.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    inputElement.blur(); // 觸發 blur 事件
+                } else if (event.key === 'Escape') {
+                    // 取消編輯，直接重繪列表
+                    renderStudentList(classIndex);
+                }
+            });
+
+            // 3. 替換 DOM
+            parentContainer.replaceChild(inputElement, displayElement);
             inputElement.focus();
             inputElement.select();
         }
         
+        /**
+         * [MODIFIED]
+         * 移除 onCompleteCallback，統一在儲存後呼叫 renderStudentList
+         * 這樣能確保 ID 排序變更時列表也能正確更新。
+         */
         function saveEdit(classIndex, studentId, field, newValue) {
             const student = classData[classIndex].students.find(s => s.id === studentId);
-            if (!student) { renderStudentList(classIndex); return; }
             
-            newValue = newValue.trim();
+            // 標記是否需要儲存（避免在未變更時也儲存）
+            let needsSave = false;
             
-            if (newValue === "") {
-                showMessage(`${field === 'id' ? '座號' : '姓名'}不能為空`, 3000);
-                renderStudentList(classIndex);
-                return;
-            }
-            if (field === 'id') {
-                const newId = parseInt(newValue);
-                if (isNaN(newId) || newId < 1) {
-                    showMessage('座號必須是正整數', 3000);
-                } else if (newId !== student.id && classData[classIndex].students.some(s => s.id === newId)) {
-                    showMessage('座號已存在', 3000);
-                } else if (newId !== student.id) {
-                    student.id = newId;
-                    classData[classIndex].students.sort((a, b) => a.id - b.id);
-                    saveData();
-                    showMessage('座號更新成功', 2000);
+            if (student) {
+                newValue = newValue.trim();
+
+                if (newValue === "") {
+                    showMessage(`${field === 'id' ? '座號' : '姓名'}不能為空`, 3000);
+                } else if (field === 'id') {
+                    const newId = parseInt(newValue);
+                    if (isNaN(newId) || newId < 1) {
+                        showMessage('座號必須是正整數', 3000);
+                    } else if (newId !== student.id && classData[classIndex].students.some(s => s.id === newId)) {
+                        showMessage('座號已存在', 3000);
+                    } else if (newId !== student.id) {
+                        student.id = newId;
+                        classData[classIndex].students.sort((a, b) => a.id - b.id); // ID 變更，重新排序
+                        needsSave = true;
+                        showMessage('座號更新成功', 2000);
+                    }
+                } else if (field === 'name') {
+                    if (newValue !== student.name) {
+                        student.name = newValue; // 儲存原始純文字
+                        needsSave = true;
+                        showMessage('姓名更新成功', 2000);
+                    }
                 }
-            } else if (field === 'name') {
-                if (newValue !== student.name) {
-                    student.name = newValue; // 儲存原始純文字
-                    saveData();
-                    showMessage('姓名更新成功', 2000);
-                }
             }
+
+            if (needsSave) {
+                saveData();
+            }
+
+            // 統一重繪列表以還原 UI (無論是否儲存成功，都要還原 input -> span)
             renderStudentList(classIndex);
         }
 
@@ -966,12 +1047,23 @@
             }
         }
 
+        /**
+         * [OPTIMIZATION]
+         * 勾選單一學生時，不再重繪整個列表，
+         * 僅更新 data 和必要的 UI 狀態。
+         */
         function toggleStudentSelection(classIndex, studentId) {
             const student = classData[classIndex].students.find(s => s.id === studentId);
             if (student) {
                 student.selected = !student.selected;
                 saveData();
-                renderStudentList(classIndex); // 直接 render
+                
+                // --- 不再呼叫 renderStudentList() ---
+                
+                // 1. 更新全選框狀態
+                updateSelectAllCheckboxState();
+                // 2. 更新抽籤按鈕狀態
+                updateDrawButtonState(classData[classIndex].students);
             }
         }
 
@@ -1494,6 +1586,12 @@
             dom.countdownStopBtn.addEventListener('click', stopCountdown);
             
             // --- Initial Load ---
+            // 設定倒數計時器預設為 5 分鐘
+            countdownSeconds = 300; // 5 * 60
+            dom.countdownDisplay.textContent = formatTime(countdownSeconds);
+            dom.countdownMinutes.value = 5;
+            dom.countdownSeconds.value = 0;
+            
             loadData();
         };
     </script>
