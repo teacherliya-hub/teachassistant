@@ -11,10 +11,10 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f9ff; /* sky-50 */
-            transition: background-color 0.3s; /* for countdown flash */
+            background-color: #f0f9ff; 
+            transition: background-color 0.3s; 
         }
-        /* Custom scrollbar */
+        
         #student-list-container::-webkit-scrollbar,
         #class-management-list::-webkit-scrollbar,
         #unseated-students-list::-webkit-scrollbar {
@@ -23,7 +23,7 @@
         #student-list-container::-webkit-scrollbar-thumb,
         #class-management-list::-webkit-scrollbar-thumb,
         #unseated-students-list::-webkit-scrollbar-thumb {
-            background-color: #bae6fd; /* sky-200 */
+            background-color: #bae6fd; 
             border-radius: 4px;
         }
         #draw-result { transition: all 0.1s ease-in-out; min-height: 100px; display: flex; align-items: center; justify-content: center; }
@@ -34,21 +34,17 @@
         .edit-btn { @apply text-gray-400 hover:text-sky-600 p-0.5 rounded transition duration-150; }
         #draw-result-modal-content { transition: all 0.2s ease-out; }
         
-        /* --- Seating Chart Styles (Ocean Theme) --- */
         .student-block {
-            /* 調整 padding 和 min-height 以適應縮小的座位 */
             @apply p-1 border border-teal-400 rounded-md cursor-grab bg-teal-100 text-teal-800 text-lg font-medium flex items-center justify-center text-center shadow;
-            min-height: 60px; /* 確保在未排座位區燜g有足夠高度 */
+            min-height: 60px; 
         }
         .student-block.dragging { @apply opacity-50 shadow-lg scale-105; }
         
         .seat {
-            /* 縮小座位高度 */
             @apply border-solid border-2 border-blue-200 rounded-md flex items-center justify-center min-h-[70px] bg-blue-50 p-1;
         }
         .seat.drag-over { @apply border-cyan-400 bg-cyan-100; }
         
-        /* 當座位被佔據時，學生方塊填滿座位 */
         .seat .student-block {
             @apply w-full h-full min-h-[60px];
         }
@@ -1557,6 +1553,7 @@
 
 </body>
 </html>
+
 
 
 
