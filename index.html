@@ -16,17 +16,18 @@
 
         #student-list-container::-webkit-scrollbar,
         #class-management-list::-webkit-scrollbar,
-        #unseated-students-list::-webkit-scrollbar {
+        #unseated-students-list::-webkit-scrollbar,
+        #ungrouped-students-list::-webkit-scrollbar { /* [NEW] */
             width: 8px;
         }
         #student-list-container::-webkit-scrollbar-thumb,
         #class-management-list::-webkit-scrollbar-thumb,
-        #unseated-students-list::-webkit-scrollbar-thumb {
+        #unseated-students-list::-webkit-scrollbar-thumb,
+        #ungrouped-students-list::-webkit-scrollbar-thumb { /* [NEW] */
             background-color: #bae6fd; /* sky-200 */
             border-radius: 4px;
         }
         #draw-result { transition: all 0.1s ease-in-out; min-height: 100px; display: flex; align-items: center; justify-content: center; }
-        .timer-display-stopwatch { font-size: 3rem; font-weight: 700; color: #78350f; letter-spacing: 2px; margin: 10px 0; min-width: 150px; text-align: center; }
         .timer-display-countdown { font-size: 3rem; font-weight: 700; color: #881337; letter-spacing: 2px; margin: 10px 0; min-width: 150px; text-align: center; }
         .score-btn { @apply p-2 rounded-full shadow-md transition duration-150 ease-in-out hover:shadow-lg focus:outline-none; }
         .editable-content { display: flex; align-items: center; justify-content: start; gap: 4px; }
@@ -37,56 +38,62 @@
             @apply p-1 border border-teal-400 rounded-md cursor-grab bg-teal-100 text-teal-800 text-lg font-medium flex items-center justify-center text-center shadow;
             min-height: 60px;                                                 
         }
+        /* [NEW] 分組頁面的學生方塊樣式 */
+        .group-area .student-block,
+        #ungrouped-students-list .student-block {
+            @apply w-full h-auto min-h-0 flex-row justify-start gap-2 p-1.5 text-base;
+            min-height: auto;
+        }
+
         .student-block.dragging { @apply opacity-50 shadow-lg scale-105; }
         
+        /* 座位表 */
         .seat {
-
             @apply border-solid border-2 border-blue-200 rounded-md flex items-center justify-center min-h-[70px] bg-blue-50 p-1;
         }
         .seat.drag-over { @apply border-cyan-400 bg-cyan-100; }
-        
-
         .seat .student-block {
-            @apply w-full h-full min-h-[60px];
+            @apply w-full h-full min-h-[60px] flex-col; /* 確保座位表中的樣式不變 */
         }
+        
+        /* [NEW] 分組 */
+        .group-area {
+            @apply border-solid border-2 border-blue-200 rounded-md min-h-[150px] bg-blue-50 p-3 space-y-2;
+        }
+        .group-area.drag-over,
+        #ungrouped-students-list.drag-over { 
+            @apply border-cyan-400 bg-cyan-100; 
+        }
+
     </style>
 </head>
 <body class="bg-sky-50">
 
     <nav class="bg-sky-700 shadow-lg sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- 
-              RWD MODIFIED: 
-              - h-16 -> h-auto md:h-16 
-              - flex justify-between items-center -> flex flex-col md:flex-row md:justify-between md:items-center 
-
-              - py-3 md:py-0 
-            -->
             <div class="flex flex-col md:flex-row md:justify-between md:items-center h-auto md:h-16 py-3 md:py-0">
-                <!-- RWD MODIFIED: self-center md:self-auto  -->
                 <h1 class="text-xl font-bold text-white self-center md:self-auto">前鎮國中課堂助手</h1>
-                <!-- RWD MODIFIED: self-center md:self-auto  | mt-3 md:mt-0  -->
                 <div class="flex items-center space-x-4 self-center md:self-auto mt-3 md:mt-0">
-                    <button id="toggle-stopwatch-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="計時器">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </button>
                     <button id="toggle-countdown-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="倒數計時">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 2h12v6l-4 4 4 4v6H6v-6l4-4-4-4V2z" />
                         </svg>
                     </button>
-                    <!-- SEATING CHART BUTTON (Icon Updated) -->
                     <button id="toggle-seating-chart-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="座位表">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 20v-5.333c0-1.473.8-2.667 2-2.667h4c1.2 0 2 1.194 2 2.667V20M8 20h8M8 20l-2 2M16 20l2 2M5 9V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2Z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 text-sky-200 hover:text-white">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                        </svg>
+                    </button>
+                    <!-- [NEW] 分組按鈕 -->
+                    <button id="toggle-grouping-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="分組">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 text-sky-200 hover:text-white">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                         </svg>
                     </button>
                     <button id="toggle-management-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="班級管理">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-200 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826 3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6 text-sky-200 hover:text-white">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
                     </button>
                     <button id="add-class-modal-btn" class="p-3 rounded-full hover:bg-sky-600 transition duration-150" title="新增班級與學生資料">
@@ -100,14 +107,6 @@
     </nav>
     
     <div id="timer-container" class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
-        <div id="stopwatch-area" class="bg-amber-100 p-4 rounded-lg shadow-md mb-4 hidden flex flex-col items-center justify-center gap-4 md:flex-row md:space-x-4 md:gap-0">
-            <span class="timer-display-stopwatch" id="stopwatch-display">00:00</span>
-            <div class="flex flex-wrap justify-center gap-2">
-                <button id="stopwatch-start-btn" class="px-4 py-2 bg-sky-500 text-white font-semibold rounded-lg hover:bg-sky-600 transition duration-150 shadow-md">開始</button>
-                <button id="stopwatch-stop-btn" class="px-4 py-2 bg-slate-500 text-white font-semibold rounded-lg hover:bg-slate-600 transition duration-150 shadow-md">停止</button>
-                <button id="stopwatch-reset-btn" class="px-4 py-2 bg-rose-500 text-white font-semibold rounded-lg hover:bg-rose-600 transition duration-150 shadow-md">重設</button>
-            </div>
-        </div>
         <div id="countdown-area" class="bg-rose-100 p-4 rounded-lg shadow-md mb-4 hidden flex flex-col items-center justify-center gap-4 md:flex-row md:space-x-4 md:gap-0">
             <span class="timer-display-countdown" id="countdown-display">00:00</span>
             <div class="flex flex-wrap items-center justify-center gap-2">
@@ -186,14 +185,15 @@
         </section>
     </main>
 
-    <!-- SEATING CHART VIEW -->
-    <!-- Grid changed to 8 columns for 1:7 ratio -->
+    <!-- SEATING CHART VIEW (1:5 ratio) -->
     <div id="seating-chart-view" class="hidden max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-8 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
             <!-- Left Panel: Unseated Students (1 column) -->
             <div class="lg:col-span-1 bg-white p-4 rounded-xl shadow-lg border border-sky-200/50">
                 <h2 class="text-xl font-semibold text-sky-800 mb-2 pb-2 border-b">未排座位</h2>
-                 <!-- Seating chart class select -->
+                <button id="random-assign-btn" class="w-full px-3 py-2 bg-teal-500 text-white text-sm font-semibold rounded-lg hover:bg-teal-600 transition my-3 shadow">
+                    隨機排位
+                </button>
                 <div class="mb-4">
                     <label for="class-select-seating" class="block text-sm font-medium text-slate-700 mb-1">目前班級：</label>
                     <select id="class-select-seating" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 transition duration-150 shadow-sm">
@@ -201,37 +201,70 @@
                     </select>
                 </div>
                 <div id="unseated-students-list" class="space-y-2 h-[65vh] overflow-y-auto pr-2">
-                    <!-- Student blocks will be dynamically inserted here -->
+                    <!-- Student blocks (seat style) -->
                 </div>
             </div>
-            <!-- Right Panel: Classroom Layout (7 columns) -->
-            <div class="lg:col-span-7 bg-white p-4 rounded-xl shadow-lg border border-sky-200/50">
-                 <!-- Controls -->
+            <!-- Right Panel: Classroom Layout (5 columns) -->
+            <div class="lg:col-span-5 bg-white p-4 rounded-xl shadow-lg border border-sky-200/50">
                  <div class="flex flex-wrap items-center justify-center gap-4 mb-4 p-3 bg-blue-50 rounded-lg">
-                   
                     <label for="seat-cols" class="font-medium">排數(直):</label>
                     <input type="number" id="seat-cols" class="w-20 p-2 border rounded-md" min="1" max="20" value="7">
- 		    <label for="seat-rows" class="font-medium">列數(橫):</label>
+ 		            <label for="seat-rows" class="font-medium">列數(橫):</label>
                     <input type="number" id="seat-rows" class="w-20 p-2 border rounded-md" min="1" max="20" value="6">
                     <button id="generate-seat-grid-btn" class="px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition">產生座位表</button>
                     <button id="reset-seating-chart-btn" class="px-4 py-2 bg-rose-500 text-white font-semibold rounded-lg hover:bg-rose-600 transition">重新排座位</button>
                  </div>
-                 <!-- Teacher's Desk -->
                  <div class="flex justify-center mb-4">
                     <div class="w-1/3 py-2 bg-blue-800 text-white text-center rounded-md font-semibold shadow">講桌</div>
                  </div>
-                 <!-- Column Headers -->
                  <div id="classroom-grid-cols-header" class="grid gap-1 mb-2" style="grid-template-columns: repeat(7, 1fr);">
-                    <!-- Column headers (e.g., 第 1 排) will be injected here -->
+                    <!-- Column headers -->
                  </div>
-                 <!-- Seating Grid -->
                  <div id="classroom-grid" class="grid gap-1" style="grid-template-columns: repeat(7, 1fr);">
-                    <!-- Seats will be dynamically inserted here -->
+                    <!-- Seats -->
                  </div>
             </div>
         </div>
     </div>
     
+    <!-- [NEW] GROUPING VIEW (1:5 ratio, blue theme) -->
+    <div id="grouping-view" class="hidden max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
+            <!-- Left Panel: Ungrouped Students (1 column) -->
+            <div class="lg:col-span-1 bg-white p-4 rounded-xl shadow-lg border border-sky-200/50">
+                <h2 class="text-xl font-semibold text-sky-800 mb-2 pb-2 border-b">待分組</h2>
+                <!-- [MOVED] 一鍵分組按鈕 -->
+                <button id="random-group-assign-btn" class="w-full px-3 py-2 bg-teal-500 text-white text-sm font-semibold rounded-lg hover:bg-teal-600 transition my-3 shadow">一鍵分組</button>
+                <div class="mb-4"> <!-- 移除了 mt-3 -->
+                    <label for="class-select-grouping" class="block text-sm font-medium text-slate-700 mb-1">目前班級：</label>
+                    <select id="class-select-grouping" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 transition duration-150 shadow-sm">
+                        <option value="" disabled selected>請先新增班級資料</option>
+                    </select>
+                </div>
+                <div id="ungrouped-students-list" class="space-y-2 h-[65vh] overflow-y-auto pr-2 border-dashed border-2 border-transparent rounded-lg">
+                    <!-- Student blocks (group style) -->
+                </div>
+            </div>
+            <!-- Right Panel: Grouping Layout (5 columns) -->
+            <div class="lg:col-span-5 bg-white p-4 rounded-xl shadow-lg border border-sky-200/50">
+                 <!-- Controls -->
+                 <div class="flex flex-wrap items-center justify-center gap-4 mb-4 p-3 bg-blue-50 rounded-lg">
+                    <label for="group-count-input" class="font-medium">組數:</label>
+                    <input type="number" id="group-count-input" class="w-20 p-2 border rounded-md" min="1" max="20" value="4">
+                    <button id="generate-group-areas-btn" class="px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition">產生分組</button>
+                    <!-- [MOVED] "一鍵分組" 按鈕已移至左側面板 -->
+                    <button id="reset-grouping-btn" class="px-4 py-2 bg-rose-500 text-white font-semibold rounded-lg hover:bg-rose-600 transition">重新分組</button>
+                 </div>
+                 
+                 <!-- Grouping Grid -->
+                 <div id="grouping-areas-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[75vh] overflow-y-auto p-2">
+                    <!-- Group areas -->
+                 </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Modals -->
     <div id="data-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden z-20 items-center justify-center">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
@@ -295,10 +328,19 @@
     <script src="app.js" defer></script>
 
     <footer class="text-center py-6 mt-10">
-        <p class="text-sm text-slate-500">前鎮國中　數位共學社群</p>
+        <p class="text-sm text-slate-500">前鎮國中 數位共學社群</p>
     </footer>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
 
 
