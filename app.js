@@ -1,4 +1,4 @@
-        // --- 全局變數 ---
+// --- 全局變數 ---
         let classData = [];
         let currentClassIndex = -1;
         let isManagementViewActive = false;
@@ -897,6 +897,8 @@
         }
 
         /* --- STUDENT LIST & MANAGEMENT FUNCTIONS --- */
+        
+        // [REFACTORED] 移除所有 on... 屬性，改用 data-* 和 class
         function renderStudentList(classIndex) {
             if (!dom.studentListBody) return;
             const studentListBody = dom.studentListBody;
@@ -920,11 +922,15 @@
                 const safeScore = sanitizeString(student.score);
 
                 row.innerHTML = `
-                    <td class="px-4 py-3"><input type="checkbox" class="h-5 w-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer" ${student.selected ? 'checked' : ''} onchange="toggleStudentSelection(${classIndex}, ${student.id})"></td>
+                    <td class="px-4 py-3">
+                        <input type="checkbox" class="h-5 w-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500 cursor-pointer student-select-checkbox" 
+                               ${student.selected ? 'checked' : ''} data-student-id="${safeId}">
+                    </td>
                     <td class="px-4 py-3 text-sm text-slate-600">
                         <div class="editable-content items-center">
                             <span id="id-display-${safeId}">${safeId}</span>
-                            <button onclick="startEdit(${classIndex}, ${student.id}, 'id')" class="edit-btn ml-2" title="編輯座號">
+                            <button class="edit-btn ml-2 btn-edit-student" title="編輯座號" 
+                                    data-student-id="${safeId}" data-field="id">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                             </button>
                         </div>
@@ -932,17 +938,25 @@
                     <td class="px-6 py-3 text-base font-medium text-slate-900">
                         <div class="editable-content items-center">
                             <span id="name-display-${safeId}">${safeName}</span>
-                            <button onclick="startEdit(${classIndex}, ${student.id}, 'name')" class="edit-btn ml-2" title="編輯姓名">
+                            <button class="edit-btn ml-2 btn-edit-student" title="編輯姓名"
+                                    data-student-id="${safeId}" data-field="name">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
                             </button>
                         </div>
                     </td>
                     <td class="px-6 py-3 text-center">
                         <div class="flex items-center justify-center space-x-3">
-                            <button onclick="updateScore(${classIndex}, ${student.id}, -1)" class="score-btn bg-teal-500 text-white hover:bg-teal-600"><span class="text-xl leading-none">－</span></button>
+                            <button class="score-btn bg-teal-500 text-white hover:bg-teal-600 btn-update-score" 
+                                    data-student-id="${safeId}" data-delta="-1">
+                                <span class="text-xl leading-none">－</span>
+                            </button>
                             <span id="score-${safeId}" class="text-lg font-bold text-slate-800 w-12 text-center">${safeScore}</span>
-                            <button onclick="updateScore(${classIndex}, ${student.id}, 1)" class="score-btn bg-rose-500 text-white hover:bg-rose-600"><span class="text-xl leading-none">＋</span></button>
-                            <button onclick="deleteStudent(${classIndex}, ${student.id})" class="score-btn bg-slate-500 text-white hover:bg-slate-600" title="刪除學生">
+                            <button class="score-btn bg-rose-500 text-white hover:bg-rose-600 btn-update-score"
+                                    data-student-id="${safeId}" data-delta="1">
+                                <span class="text-xl leading-none">＋</span>
+                            </button>
+                            <button class="score-btn bg-slate-500 text-white hover:bg-slate-600 btn-delete-student" title="刪除學生"
+                                    data-student-id="${safeId}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002 2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
                                 </svg>
@@ -978,6 +992,7 @@
             dom.selectAllCheckbox.indeterminate = !allSelected && someSelected;
         }
 
+        // [MODIFIED] 函式本身不變，但它現在由 dom.selectAllCheckbox 上的事件監聽器呼叫
         function toggleSelectAll(checkbox) {
             if (currentClassIndex === -1 || !dom.studentListBody) return;
             const isChecked = checkbox.checked;
@@ -1191,6 +1206,7 @@
             updateView();
         }
 
+        // [REFACTORED] 移除所有 on... 屬性，改用 data-* 和 class
         function renderClassManagementList() {
             const contentArea = dom.classManagementContent;
             if (!contentArea) return;
@@ -1215,10 +1231,14 @@
                 item.innerHTML = `
                     <span class="font-semibold text-slate-700">${safeClassName}</span>
                     <div class="flex items-center space-x-2">
-                        <button onclick="resetClassScores(${index})" class="px-3 py-1 bg-amber-500 text-white text-sm rounded hover:bg-amber-600 transition">分數歸零</button>
-                        <button onclick="showAddStudentForm(${index})" class="px-3 py-1 bg-teal-500 text-white text-sm rounded hover:bg-teal-600 transition">新增學生</button>
-                        <button onclick="renderEditClassForm(${index})" class="px-3 py-1 bg-sky-500 text-white text-sm rounded hover:bg-sky-600 transition">修改</button>
-                        <button onclick="deleteClass(${index})" class="px-3 py-1 bg-rose-500 text-white text-sm rounded hover:bg-rose-600 transition">刪除</button>
+                        <button class="px-3 py-1 bg-amber-500 text-white text-sm rounded hover:bg-amber-600 transition btn-mgmt" 
+                                data-class-index="${index}" data-action="reset-scores">分數歸零</button>
+                        <button class="px-3 py-1 bg-teal-500 text-white text-sm rounded hover:bg-teal-600 transition btn-mgmt" 
+                                data-class-index="${index}" data-action="show-add-student">新增學生</button>
+                        <button class="px-3 py-1 bg-sky-500 text-white text-sm rounded hover:bg-sky-600 transition btn-mgmt" 
+                                data-class-index="${index}" data-action="edit-class">修改</button>
+                        <button class="px-3 py-1 bg-rose-500 text-white text-sm rounded hover:bg-rose-600 transition btn-mgmt" 
+                                data-class-index="${index}" data-action="delete-class">刪除</button>
                     </div>`;
                 itemWrapper.appendChild(item);
                 listContainer.appendChild(itemWrapper);
@@ -1226,6 +1246,7 @@
             contentArea.appendChild(listContainer);
         }
         
+        // [REFACTORED] 移除所有 on... 屬性，改用 data-* 和 class
         function showAddStudentForm(index) {
             renderClassManagementList();
             const classItemWrapper = dom.classManagementContent.querySelectorAll('.class-management-item-wrapper')[index];
@@ -1234,8 +1255,10 @@
                 <div class="mt-2 p-3 bg-slate-100 rounded-lg border">
                     <textarea id="new-students-input-${index}" class="w-full h-24 p-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="輸入座號 姓名 例如\n1 王一一"></textarea>
                     <div class="flex justify-end space-x-2 mt-2">
-                        <button onclick="addStudentsToClass(${index})" class="px-3 py-1 bg-teal-600 text-white text-sm rounded hover:bg-teal-700">確認新增</button>
-                        <button onclick="renderClassManagementList()" class="px-3 py-1 bg-slate-300 text-slate-800 text-sm rounded hover:bg-slate-400">取消</button>
+                        <button class="px-3 py-1 bg-teal-600 text-white text-sm rounded hover:bg-teal-700 btn-mgmt" 
+                                data-class-index="${index}" data-action="confirm-add-student">確認新增</button>
+                        <button class="px-3 py-1 bg-slate-300 text-slate-800 text-sm rounded hover:bg-slate-400 btn-mgmt" 
+                                data-action="cancel-mgmt">取消</button>
                     </div>
                 </div>
             `;
@@ -1274,6 +1297,7 @@
             renderClassManagementList();
         }
 
+        // [REFACTORED] 移除所有 on... 屬性，改用 data-* 和 class
         function renderEditClassForm(index) {
             const cls = classData[index];
             const contentArea = dom.classManagementContent;
@@ -1294,8 +1318,10 @@
                         <textarea id="edit-student-list" class="w-full h-48 p-2 border border-gray-300 rounded-lg text-sm font-mono">${safeStudentList}</textarea>
                     </div>
                     <div class="flex justify-end space-x-3">
-                        <button onclick="saveClassChanges(${index})" class="px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700">儲存變更</button>
-                        <button onclick="renderClassManagementList()" class="px-4 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300">取消</button>
+                        <button class="px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 btn-mgmt" 
+                                data-class-index="${index}" data-action="save-class-changes">儲存變更</button>
+                        <button class="px-4 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 btn-mgmt" 
+                                data-action="cancel-mgmt">取消</button>
                     </div>
                 </div>`;
         }
@@ -1677,6 +1703,9 @@
             
             // Draw
             if (dom.drawBtn) dom.drawBtn.addEventListener('click', drawStudent);
+
+            // [REFACTORED] 移除靜態 onchange，改用 addEventListener
+            if (dom.selectAllCheckbox) dom.selectAllCheckbox.addEventListener('change', () => toggleSelectAll(dom.selectAllCheckbox));
             
             // Seating Chart
             if (dom.generateSeatGridBtn) dom.generateSeatGridBtn.addEventListener('click', handleGenerateGrid);
@@ -1720,6 +1749,98 @@
             if (dom.countdownStartBtn) dom.countdownStartBtn.addEventListener('click', startCountdown);
             if (dom.countdownStopBtn) dom.countdownStopBtn.addEventListener('click', stopCountdown);
             
+            
+            // --- [NEW] 事件委派 (Event Delegation) ---
+
+            // 1. 學生列表 (勾選)
+            if (dom.studentListBody) {
+                dom.studentListBody.addEventListener('change', (e) => {
+                    const checkbox = e.target.closest('.student-select-checkbox');
+                    if (checkbox) {
+                        const studentId = parseInt(checkbox.dataset.studentId);
+                        if (currentClassIndex !== -1 && !isNaN(studentId)) {
+                            toggleStudentSelection(currentClassIndex, studentId);
+                        }
+                    }
+                });
+                
+                // 2. 學生列表 (按鈕：編輯、加減分、刪除)
+                dom.studentListBody.addEventListener('click', (e) => {
+                    const btnEdit = e.target.closest('.btn-edit-student');
+                    if (btnEdit) {
+                        const studentId = parseInt(btnEdit.dataset.studentId);
+                        const field = btnEdit.dataset.field;
+                        if (currentClassIndex !== -1 && !isNaN(studentId) && field) {
+                            startEdit(currentClassIndex, studentId, field);
+                        }
+                        return; // 處理完畢
+                    }
+
+                    const btnUpdateScore = e.target.closest('.btn-update-score');
+                    if (btnUpdateScore) {
+                        const studentId = parseInt(btnUpdateScore.dataset.studentId);
+                        const delta = parseInt(btnUpdateScore.dataset.delta);
+                        if (currentClassIndex !== -1 && !isNaN(studentId) && !isNaN(delta)) {
+                            updateScore(currentClassIndex, studentId, delta);
+                        }
+                        return; // 處理完畢
+                    }
+                    
+                    const btnDelete = e.target.closest('.btn-delete-student');
+                    if (btnDelete) {
+                        const studentId = parseInt(btnDelete.dataset.studentId);
+                        if (currentClassIndex !== -1 && !isNaN(studentId)) {
+                            deleteStudent(currentClassIndex, studentId);
+                        }
+                        return; // 處理完畢
+                    }
+                });
+            }
+            
+            // 3. 班級管理 (所有按鈕)
+            if (dom.classManagementContent) {
+                dom.classManagementContent.addEventListener('click', (e) => {
+                    const button = e.target.closest('.btn-mgmt');
+                    if (!button) return;
+                    
+                    const action = button.dataset.action;
+                    const classIndex = button.dataset.classIndex ? parseInt(button.dataset.classIndex) : -1;
+
+                    if (!action) return;
+                    if (classIndex === -1 && action !== 'cancel-mgmt') {
+                        // 'cancel-mgmt' 不需要 index，其他都需要
+                        console.error('Action requires class index, but none provided:', action);
+                        return;
+                    }
+
+                    switch (action) {
+                        case 'reset-scores':
+                            resetClassScores(classIndex);
+                            break;
+                        case 'show-add-student':
+                            showAddStudentForm(classIndex);
+                            break;
+                        case 'edit-class':
+                            renderEditClassForm(classIndex);
+                            break;
+                        case 'delete-class':
+                            deleteClass(classIndex);
+                            break;
+                        case 'confirm-add-student':
+                            addStudentsToClass(classIndex);
+                            break;
+                        case 'save-class-changes':
+                            saveClassChanges(classIndex);
+                            break;
+                        case 'cancel-mgmt':
+                            renderClassManagementList();
+                            break;
+                        default:
+                            console.warn('Unknown mgmt action:', action);
+                    }
+                });
+            }
+            
             // --- Initial Load ---
             countdownSeconds = 300; // 5 * 60
             if (dom.countdownDisplay) dom.countdownDisplay.textContent = formatTime(countdownSeconds);
@@ -1728,4 +1849,3 @@
             
             loadData();
         };
-
