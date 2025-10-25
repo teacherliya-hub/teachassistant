@@ -1,4 +1,4 @@
-// --- 全局變數 ---
+        // --- 全局變數 ---
         let classData = [];
         let currentClassIndex = -1;
         let isManagementViewActive = false;
@@ -793,6 +793,7 @@
         }
 
         // [NEW]
+        // [REFACTORED] 優化效能，移除 renderGroupingView
         function handleDropOnGroup(e) {
             e.preventDefault();
             if (!draggedStudentId || currentClassIndex === -1) return;
@@ -816,10 +817,12 @@
             groups[targetKey].push(draggedStudentId);
             
             saveData();
-            renderGroupingView();
+            // renderGroupingView(); // [REMOVED]
+            targetGroupArea.appendChild(draggedElement); // [ADDED]
         }
 
         // [NEW]
+        // [REFACTORED] 優化效能，移除 renderGroupingView
         function handleDropOnUngrouped(e) {
             e.preventDefault();
              if (!draggedStudentId || currentClassIndex === -1) return;
@@ -837,7 +840,8 @@
             
             if (changed) {
                 saveData();
-                renderGroupingView();
+                // renderGroupingView(); // [REMOVED]
+                target.appendChild(draggedElement); // [ADDED]
             }
         }
         
@@ -1046,6 +1050,7 @@
         function saveEdit(classIndex, studentId, field, newValue) {
             const student = classData[classIndex].students.find(s => s.id === studentId);
             let needsSave = false;
+            let didNameChange = false; // [ADDED]
             
             if (student) {
                 newValue = newValue.trim();
@@ -1070,12 +1075,37 @@
                     if (newValue !== student.name) {
                         student.name = newValue;
                         needsSave = true;
+                        didNameChange = true; // [NEW] Set flag // [ADDED]
                         showMessage('姓名更新成功', 2000);
                     }
                 }
             }
             if (needsSave) saveData();
-            renderStudentList(classIndex);
+            // renderStudentList(classIndex); // [REMOVED]
+
+            // [NEW LOGIC]
+            if (didNameChange) {
+                // Only name changed, just update DOM
+                const inputElement = dom.studentListBody.querySelector('.edit-input-field');
+                if (inputElement) {
+                    const parentContainer = inputElement.parentElement;
+
+                    // Re-create the span that was replaced
+                    const displayElement = document.createElement('span');
+                    displayElement.id = `name-display-${studentId}`; // studentId is the original ID, which is correct
+                    displayElement.textContent = newValue; // The new name
+
+                    parentContainer.replaceChild(displayElement, inputElement);
+                } else {
+                    // Fallback if input not found (shouldn't happen)
+                    renderStudentList(classIndex);
+                }
+            } else {
+                // ID was edited (success or fail), or name edit failed
+                // These cases are complex (IDs on all buttons change) or need to restore the view
+                // Safest to re-render the whole list
+                renderStudentList(classIndex);
+            }
         }
         
         // [NEW HELPER]
@@ -1126,7 +1156,16 @@
                         
                         saveData();
                         showMessage(`學生 "${sanitizeString(studentName)}" 已被刪除。`);
-                        updateView(); // 統一更新
+                        
+                        // [REMOVED] updateView(); // 統一更新
+                        
+                        // [ADDED] 精確移除 DOM 元素並更新 UI 狀態
+                        const rowToRemove = dom.studentListBody.querySelector(`[data-student-id="${studentId}"]`);
+                        if (rowToRemove) {
+                            rowToRemove.closest('tr').remove();
+                        }
+                        updateSelectAllCheckboxState(); // [新增] 刪除後更新「全選」框的狀態
+                        updateDrawButtonState(classData[classIndex].students); // [新增] 刪除後更新抽籤按鈕狀態
                     }
                 );
             }
@@ -1849,3 +1888,5 @@
             
             loadData();
         };
+
+
